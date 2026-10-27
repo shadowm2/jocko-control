@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Livewire;
+
+use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Services\DashboardMetrics;
+use Illuminate\Contracts\View\View;
+use Livewire\Component;
+
+class Dashboard extends Component
+{
+    use AuthorizesAdmin;
+
+    public function render(DashboardMetrics $metrics): View
+    {
+        return view('livewire.dashboard', [
+            'summary' => $metrics->summary(),
+            'activity' => $metrics->recentActivity(),
+            'syncErrors' => $metrics->recentSyncErrors(),
+        ])->layout('components.layouts.app', ['title' => __('ui.dashboard.title')]);
+    }
+}
