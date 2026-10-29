@@ -32,6 +32,10 @@ Route::middleware(['auth', 'admin'])->group(function (): void {
     Route::livewire('shops/{shop}', Shops\Show::class)->name('shops.show');
     Route::livewire('shops/{shop}/edit', Shops\Form::class)->name('shops.edit');
 
+    Route::livewire('shops/{shop}/data', Shops\Data\Overview::class)->name('shops.data');
+    Route::livewire('shops/{shop}/data/{entity}', Shops\Data\Records::class)->name('shops.data.entity');
+    Route::livewire('shops/{shop}/data/{entity}/{record}', Shops\Data\Show::class)->name('shops.data.show');
+
     Route::livewire('events', Events\Index::class)->name('events.index');
     Route::livewire('audit', Audit\Index::class)->name('audit.index');
 });

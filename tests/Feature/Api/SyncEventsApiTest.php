@@ -302,7 +302,7 @@ class SyncEventsApiTest extends TestCase
         $this->assertDatabaseCount('sync_events', 1);
     }
 
-    public function test_no_business_tables_are_touched_by_ingestion(): void
+    public function test_ingestion_only_adds_the_read_only_shop_mirror_beside_the_inbox(): void
     {
         $issued = $this->issueDevice();
 
@@ -310,8 +310,9 @@ class SyncEventsApiTest extends TestCase
 
         $tables = collect(Schema::getTables(config('database.connections.mysql.database')))
             ->pluck('name')
-            ->reject(fn (string $t) => in_array($t, ['migrations', 'sessions', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'password_reset_tokens', 'users', 'personal_access_tokens', 'shops', 'shop_devices', 'sync_events', 'remote_commands', 'audit_logs'], true));
+            ->reject(fn (string $t) => in_array($t, ['migrations', 'sessions', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'password_reset_tokens', 'users', 'personal_access_tokens', 'shops', 'shop_devices', 'sync_events', 'remote_commands', 'audit_logs', 'shop_records'], true));
 
         $this->assertEmpty($tables, 'Unexpected business tables: '.$tables->implode(', '));
+        $this->assertDatabaseCount('shop_records', 0);
     }
 }

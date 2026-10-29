@@ -8,7 +8,7 @@
     </div>
 
     <flux:card>
-        <form method="POST" action="{{ route('login') }}" class="space-y-6">
+        <form method="POST" action="{{ route('login') }}" class="flex flex-col gap-6">
             @csrf
 
             <flux:field>

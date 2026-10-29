@@ -11,10 +11,11 @@ This MVP covers the central infrastructure only:
 - device registration with revocable API tokens;
 - an authenticated, versioned device API (`/api/v1`): identity, heartbeat, event push, command pull and acknowledgement;
 - a durable, idempotent inbox of synchronization events;
+- a **read-only mirror of each shop's data** (orders, customers, cars, inventory, purchases, payments…) projected from those events and browsable per shop;
 - a queue of allowlisted remote commands;
 - an audit trail.
 
-> **Ingestion boundary.** Receiving a synchronization event only *records* it in the `sync_events` inbox. **Nothing is applied to any central repair-order, customer, vehicle, inventory or payment table**, because those schemas and their conflict rules do not exist yet. Applying events is a later phase, hooked in through `App\Contracts\SyncEventHandler` (see [Extending](#extending-event-processing)).
+> **Ingestion boundary.** Receiving a synchronization event first only *records* it in the `sync_events` inbox. The one thing applied from there is the **read-only shop mirror** (`shop_records`, see [Shop data](#shop-data-read-only-mirror)). Control never writes back to a shop's data, and there is still no central repair-order, customer or inventory *business* schema with conflict rules. Further consumers hook in through `App\Contracts\SyncEventHandler` (see [Extending](#extending-event-processing)).
 
 Stack: Laravel 13, PHP 8.5 (8.3+ supported), MySQL 8, Livewire 4, Flux UI (free), Tailwind CSS 4, Laravel Sanctum, PHPUnit.
 
@@ -148,9 +149,23 @@ Only these types exist: `sync_now`, `check_version`, `collect_diagnostics`, `ref
 
 A command is delivered to its own device while `queued` and unexpired (at-least-once, so devices must tolerate seeing it again until they acknowledge it). Acknowledging is idempotent: repeating the same status is a no-op, contradicting a final status is `409`, and an expired command can never become completed.
 
+### Shop data (read-only mirror)
+
+Open a shop and choose **داده‌های فروشگاه** (*Shop data*) to browse a copy of its data: an overview per entity, searchable lists, and record pages that link related records (an order shows its customer, car, items, payments and the balance). Nothing on these pages can change anything; edits happen in the shop and arrive here by synchronization.
+
+How it works:
+
+1. The shop records every create, update, delete and restore in its own outbox and pushes them as events to `POST /api/v1/sync/events`. Each event carries the **complete state** of one record (`event_type` `order.updated`, `aggregate_type` `order`, `payload` with the record's fields and its local `id`). See [docs/api.md](docs/api.md#shop-data-events).
+2. `App\Services\ShopRecordProjector` (registered in `config('jocko.sync.handlers')`) upserts the record into `shop_records`, keyed by shop, entity and the shop's own id. Events are idempotent, and one older than what is already mirrored is ignored, so late, repeated or replayed deliveries are harmless.
+3. `config/shop_data.php` is the catalog of mirrored entities, with an **allowlist of fields** for each. A field not listed there is dropped on arrival, so a password, OTP or token can never be stored even if a shop sent it. Never add credentials to it.
+
+`php artisan jocko:project-events [--shop=UUID]` rebuilds the mirror by replaying the stored inbox (after a bug fix, or to catch up events received before the projector existed). The mirror is a view of the inbox, so `sync_events` stays the system of record.
+
+Not mirrored, on purpose: settings and API keys, roles and permissions, uploaded media files, and everything credential-like.
+
 ### Extending event processing
 
-Implement `App\Contracts\SyncEventHandler` (`supports()` and `handle()`) and list the class in `config('jocko.sync.handlers')`. Handlers run after the batch has been committed; a handler that throws is logged and never discards a stored event. Projection of events onto business tables, conflict resolution using `base_version`, and replay tooling belong there.
+Implement `App\Contracts\SyncEventHandler` (`supports()` and `handle()`) and list the class in `config('jocko.sync.handlers')`. Handlers run after the batch has been committed; a handler that throws is logged and never discards a stored event. Conflict resolution using `base_version` and projection onto further business tables belong there; the shop mirror above is the reference implementation.
 
 ## Device API
 
@@ -174,13 +189,14 @@ Frontend: `npm run build`. Feature tests disable Vite, so they do not need a bui
 - Use a dedicated MySQL user with rights on the application database only. Keep `.env` out of source control.
 - `composer install --no-dev --optimize-autoloader`, `npm ci && npm run build`, `php artisan migrate --force`, `php artisan config:cache route:cache view:cache`.
 - Run the scheduler (cron above).
-- Back up the database, in particular `sync_events` (it is the system of record for what shops have sent until projections exist) and `audit_logs`.
+- Back up the database, in particular `sync_events` (the system of record for what shops have sent; `shop_records` can be rebuilt from it) and `audit_logs`.
 - Plan retention for `sync_events` and `audit_logs`; both grow without bound.
 - Create administrators with `jocko:create-admin`; never seed a default one.
 
 ## Known limitations
 
-- Events are stored but **not projected** onto business data (by design, see above).
+- Only the read-only shop mirror is projected from events; there is no central business data with conflict resolution yet, and shops cannot be edited from here.
+- Mirror lists search the record's label (e.g. order number, name) and id only. Related lists on a record page are looked up in the record's JSON, which is fine at one shop's scale but is the first thing to index (a generated column) if it ever gets slow.
 - The admin UI has Persian strings only; no language switcher.
 - No password reset, MFA or role separation: every active user is a full administrator.
 - Rate limiting uses the configured cache store; for several app servers use a shared one (database, Redis, Memcached).

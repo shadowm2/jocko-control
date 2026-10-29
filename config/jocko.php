@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\ShopRecordProjector;
+
 return [
 
     /*
@@ -54,10 +56,13 @@ return [
 
         /*
         | Classes implementing App\Contracts\SyncEventHandler. They run after an
-        | event has been durably stored. Empty for the MVP: events are recorded
-        | in the inbox but not applied to any business table.
+        | event has been durably stored, outside the ingestion transaction. The
+        | shop mirror is the only consumer: it is read-only and feeds the
+        | shop data pages. `php artisan jocko:project-events` replays the inbox.
         */
-        'handlers' => [],
+        'handlers' => [
+            ShopRecordProjector::class,
+        ],
     ],
 
     /*

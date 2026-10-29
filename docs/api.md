@@ -273,3 +273,36 @@ Repeating the identical acknowledgment answers `200` with `already_acknowledged:
 2. When there are unsent local events: `POST /sync/events` in batches of ≤ 100, oldest first. Remove an event from the local outbox once it is `accepted` or `already_accepted`; treat `rejected` per the codes above.
 3. On `429`, wait `Retry-After`. On `5xx` or network errors, back off and resend the same batch (it is idempotent). On `403 shop_suspended`, back off for minutes, not seconds. On `401`, stop and alert the shop owner: the token was revoked or replaced.
 4. The local application must keep working regardless of any of the above failing.
+
+---
+
+## Shop data events
+
+The shop mirror (see the README) is built from ordinary `POST /sync/events` events that follow these conventions. Nothing else about the endpoint changes.
+
+| Field | Convention |
+| --- | --- |
+| `event_type` | `<entity>.<action>`, where action is `created`, `updated`, `deleted`, `restored` or `snapshot` (a full re-send of current state). |
+| `aggregate_type` | The entity, e.g. `order`, `order_item`, `payment`, `user`. Must equal the part of `event_type` before the dot. The full list is in `config/shop_data.php`. |
+| `aggregate_id` | A UUID that is stable per record. jocko-shop derives it (UUIDv5) from the entity and its local id. |
+| `payload` | The **complete** state of the record, not a diff: its fields as stored, with the shop's local primary key as integer `id`. Foreign keys are the referenced record's local `id`. Decimals are strings, enums their value, timestamps ISO 8601 UTC. `deleted_at` is `null` unless the record is soft-deleted. |
+| `occurred_at` | When the change happened. A mirrored record is only replaced by an event that is not older than the state it already has. |
+
+Only the fields listed for the entity in `config/shop_data.php` are kept; the rest is dropped on arrival. Events for other entities, or without a valid integer `id`, are still stored in the inbox but not mirrored.
+
+```json
+{
+  "event_id": "3b0f0c3e-6a43-4a0e-9d5a-6c9a4f0d3d11",
+  "event_type": "order.updated",
+  "aggregate_type": "order",
+  "aggregate_id": "b8c5c6a4-1d2c-5f3e-8a41-0c9f6d5e7a10",
+  "base_version": null,
+  "payload": {
+    "id": 7, "slug": "ord7", "order_number": "ORD-00007", "status": "completed",
+    "user_id": 3, "user_car_id": 2, "warehouse_id": 1, "description": "Brake service",
+    "created_at": "2026-10-29T10:20:12.000000Z", "updated_at": "2026-10-29T11:02:40.000000Z", "deleted_at": null
+  },
+  "occurred_at": "2026-10-29T11:02:40.123456Z"
+}
+```
+
