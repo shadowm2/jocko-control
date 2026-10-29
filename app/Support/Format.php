@@ -36,6 +36,34 @@ final class Format
         return (string) $formatter->format($local->getTimestamp());
     }
 
+    /**
+     * A calendar date with no time of day. It is not shifted between
+     * timezones: a payment made "on the 5th" stays on the 5th.
+     */
+    public static function date(?CarbonInterface $value): string
+    {
+        if ($value === null) {
+            return __('ui.common.none');
+        }
+
+        $day = $value->copy()->utc();
+
+        if (app()->getLocale() !== 'fa' || ! class_exists(IntlDateFormatter::class)) {
+            return $day->format('Y-m-d');
+        }
+
+        $formatter = new IntlDateFormatter(
+            'fa_IR@calendar=persian',
+            IntlDateFormatter::NONE,
+            IntlDateFormatter::NONE,
+            'UTC',
+            IntlDateFormatter::TRADITIONAL,
+            'yyyy/MM/dd',
+        );
+
+        return (string) $formatter->format($day->getTimestamp());
+    }
+
     public static function ago(?CarbonInterface $value): string
     {
         if ($value === null) {

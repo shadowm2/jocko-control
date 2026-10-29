@@ -10,6 +10,7 @@
         </div>
 
         <div class="flex flex-wrap gap-2">
+            <flux:button icon="circle-stack" :href="route('shops.data', $shop)" wire:navigate>{{ __('ui.shop_data.open') }}</flux:button>
             <flux:button icon="pencil-square" :href="route('shops.edit', $shop)" wire:navigate>{{ __('ui.common.edit') }}</flux:button>
 
             @if ($shop->isActive())
