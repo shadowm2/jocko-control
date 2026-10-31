@@ -4,7 +4,9 @@ namespace App\Livewire\Shops;
 
 use App\Enums\CommandType;
 use App\Enums\DeviceStatus;
+use App\Events\ShopChanged;
 use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Livewire\Concerns\RefreshesLive;
 use App\Models\RemoteCommand;
 use App\Models\Shop;
 use App\Services\RemoteCommandService;
@@ -18,7 +20,7 @@ use Livewire\Component;
 
 class CommandsPanel extends Component
 {
-    use AuthorizesAdmin;
+    use AuthorizesAdmin, RefreshesLive;
 
     /**
      * Selectable lifetimes, in hours.
@@ -46,6 +48,14 @@ class CommandsPanel extends Component
     public ?int $sinceMinutes = null;
 
     public bool $confirmed = false;
+
+    /**
+     * @return list<string>
+     */
+    protected function liveScopes(): array
+    {
+        return [ShopChanged::COMMANDS];
+    }
 
     #[Computed]
     public function shop(): Shop

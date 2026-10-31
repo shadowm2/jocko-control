@@ -3,7 +3,7 @@
     use Illuminate\Support\Facades\Lang;
 @endphp
 
-<div class="space-y-8">
+<div class="space-y-8" wire:poll.60s.visible>
     <div>
         <flux:button variant="subtle" size="sm" icon="arrow-right" class="mb-2" :href="route('shops.data.entity', [$shop, $entity])" wire:navigate>{{ __('ui.shop_data.entities.'.$entity) }} — {{ $shop->name }}</flux:button>
         <div class="flex flex-wrap items-center gap-3">
@@ -55,7 +55,7 @@
                 {{ __('ui.shop_data.entities.'.$childEntity) }}
                 <flux:badge class="ms-1">{{ Format::number($child['total']) }}</flux:badge>
             </flux:heading>
-            <flux:card class="overflow-x-auto p-0!">
+            <flux:card class="table-card overflow-x-auto p-0!">
                 <flux:table>
                     <flux:table.columns>
                         <flux:table.column>{{ __('ui.shop_data.record') }}</flux:table.column>

@@ -17,7 +17,7 @@ This MVP covers the central infrastructure only:
 
 > **Ingestion boundary.** Receiving a synchronization event first only *records* it in the `sync_events` inbox. The one thing applied from there is the **read-only shop mirror** (`shop_records`, see [Shop data](#shop-data-read-only-mirror)). Control never writes back to a shop's data, and there is still no central repair-order, customer or inventory *business* schema with conflict rules. Further consumers hook in through `App\Contracts\SyncEventHandler` (see [Extending](#extending-event-processing)).
 
-Stack: Laravel 13, PHP 8.5 (8.3+ supported), MySQL 8, Livewire 4, Flux UI (free), Tailwind CSS 4, Laravel Sanctum, PHPUnit.
+Stack: Laravel 13, PHP 8.5 (8.3+ supported), MySQL 8, Livewire 4, Flux UI (free), Tailwind CSS 4, Laravel Sanctum, Laravel Reverb (live pages), PHPUnit.
 
 ## Setup
 
@@ -74,6 +74,20 @@ php artisan db:seed --class=DemoSeeder
 ```
 
 Needs an existing administrator, refuses to run in production, and prints one device token so you can try the API straight away. That token is a secret like any other: **do not commit it** and do not paste it into tickets or chats.
+
+### Live pages (Laravel Reverb)
+
+A shop's pages (overview, dashboard, orders, all data) update the moment its data changes, without a reload. When events arrive from a shop, or a remote command is queued, delivered or finished, Control announces it once per request on the private channel `shops.{id}`; open pages listen with Laravel Echo and refresh themselves. The announcement carries no data: each page reloads what it shows through its own authorized queries, and only administrators can listen to the channel.
+
+A small dot next to the shop's tabs shows whether the page is live. Without the socket server the pages still work: each keeps a slow poll (every 60 s while visible) as a fallback, and an announcement that cannot be delivered is logged and dropped, so a device never waits for it.
+
+```bash
+php artisan reverb:install      # once: generates REVERB_APP_ID / _KEY / _SECRET in .env
+php artisan reverb:start        # the socket server (port 8080); `composer dev` starts it for you locally
+npm run build                   # the browser needs VITE_REVERB_* at build time
+```
+
+Production: run `reverb:start` under a process manager (Supervisor/systemd), put it behind your TLS proxy so browsers connect over `wss://` (set `REVERB_HOST`, `REVERB_PORT=443`, `REVERB_SCHEME=https` to the public name), and let it reach the app on the same host (the server broadcasts to Reverb over HTTP using the same `REVERB_*` values). Raise the open-files limit for many simultaneous pages (see the Reverb docs).
 
 ### Scheduler
 
@@ -151,7 +165,14 @@ A command is delivered to its own device while `queued` and unexpired (at-least-
 
 ### Shop data (read-only mirror)
 
-Open a shop and choose **داده‌های فروشگاه** (*Shop data*) to browse a copy of its data: an overview per entity, searchable lists, and record pages that link related records (an order shows its customer, car, items, payments and the balance). Nothing on these pages can change anything; edits happen in the shop and arrive here by synchronization.
+Open a shop to see it laid out like the shop itself, in four tabs:
+
+- **داشبورد** (*Dashboard*): the shop's headline numbers (orders, order value without cancelled ones, open purchases, customers), sales vs. purchases per Jalali month and sales per day, orders by status, recent orders and purchases, and low stock.
+- **سفارش‌ها** (*Orders*): every order with customer, car, warehouse, total and payment status (unpaid / partial / paid, worked out from what was billed and paid), filterable by status, payment status, creation date, and a search over order number, customer name and mobile (Persian digits work). An order opens as an invoice with its lines, payments and balance.
+- **همهٔ داده‌ها** (*All data*): every mirrored entity, for anything the screens above don't cover: an overview per entity, searchable lists, and record pages that link related records.
+- **نمای کلی** (*Overview*): the shop's registration, devices and commands.
+
+Nothing on these pages can change anything; edits happen in the shop and arrive here by synchronization.
 
 How it works:
 
@@ -159,7 +180,9 @@ How it works:
 2. `App\Services\ShopRecordProjector` (registered in `config('jocko.sync.handlers')`) upserts the record into `shop_records`, keyed by shop, entity and the shop's own id. Events are idempotent, and one older than what is already mirrored is ignored, so late, repeated or replayed deliveries are harmless.
 3. `config/shop_data.php` is the catalog of mirrored entities, with an **allowlist of fields** for each. A field not listed there is dropped on arrival, so a password, OTP or token can never be stored even if a shop sent it. Never add credentials to it.
 
-`php artisan jocko:project-events [--shop=UUID]` rebuilds the mirror by replaying the stored inbox (after a bug fix, or to catch up events received before the projector existed). The mirror is a view of the inbox, so `sync_events` stays the system of record.
+Besides the record's fields, the projector keeps three indexed columns so the dashboard and order pages can add things up without reading every row's JSON: `parent_id` (an order item's order), `amount`, and `dated_at` (when the record counts: an order's creation, a payment's `paid_at`, a purchase's `ordered_at`). `config/shop_data.php` says which field feeds which.
+
+`php artisan jocko:project-events [--shop=UUID]` rebuilds the mirror by replaying the stored inbox (after a bug fix, or to catch up events received before the projector existed). **Run it once after upgrading to the version that added these columns**: rows projected earlier have them empty until replayed, and their totals read as zero. The mirror is a view of the inbox, so `sync_events` stays the system of record.
 
 Not mirrored, on purpose: settings and API keys, roles and permissions, uploaded media files, and everything credential-like.
 
@@ -189,6 +212,7 @@ Frontend: `npm run build`. Feature tests disable Vite, so they do not need a bui
 - Use a dedicated MySQL user with rights on the application database only. Keep `.env` out of source control.
 - `composer install --no-dev --optimize-autoloader`, `npm ci && npm run build`, `php artisan migrate --force`, `php artisan config:cache route:cache view:cache`.
 - Run the scheduler (cron above).
+- Run the Reverb socket server (`php artisan reverb:start`) under a process manager and proxy it over TLS; without it the shop pages fall back to polling every minute.
 - Back up the database, in particular `sync_events` (the system of record for what shops have sent; `shop_records` can be rebuilt from it) and `audit_logs`.
 - Plan retention for `sync_events` and `audit_logs`; both grow without bound.
 - Create administrators with `jocko:create-admin`; never seed a default one.
@@ -196,7 +220,10 @@ Frontend: `npm run build`. Feature tests disable Vite, so they do not need a bui
 ## Known limitations
 
 - Only the read-only shop mirror is projected from events; there is no central business data with conflict resolution yet, and shops cannot be edited from here.
-- Mirror lists search the record's label (e.g. order number, name) and id only. Related lists on a record page are looked up in the record's JSON, which is fine at one shop's scale but is the first thing to index (a generated column) if it ever gets slow.
+- The generic *All data* lists search the record's label (e.g. order number, name) and id only.
+- Dashboard and order totals are only as fresh as the shop's last synchronization; the dashboard shows when data last arrived.
+- Order date filters use the browser's date picker (Gregorian), not a Jalali one.
+- The low-stock rule and the order-value rule are re-implemented from jocko-shop's own; if the shop changes them, change `ShopDashboardMetrics` too.
 - The admin UI has Persian strings only; no language switcher.
 - No password reset, MFA or role separation: every active user is a full administrator.
 - Rate limiting uses the configured cache store; for several app servers use a shared one (database, Redis, Memcached).

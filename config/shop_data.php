@@ -18,6 +18,11 @@
 | label    Fields joined to name a record in lists and links.
 | columns  Fields shown in the record list (the label is always first).
 | children Entities that point back here, as entity => foreign key field.
+| parent   Foreign key kept in an indexed column (parent_id) so a parent's
+|          children can be found and added up without reading every row.
+| amount   Field kept in an indexed column (amount) to add up per parent.
+| date     Fields tried in order for the date a record counts for (dated_at);
+|          created_at when none is set.
 |
 */
 
@@ -43,6 +48,8 @@ return [
 
         'order_item' => [
             'group' => 'sales',
+            'parent' => 'order_id',
+            'amount' => 'total',
             'label' => ['id'],
             'columns' => ['order_id', 'item_id', 'quantity', 'unit_price', 'total'],
             'fields' => [
@@ -58,6 +65,9 @@ return [
 
         'payment' => [
             'group' => 'sales',
+            'parent' => 'order_id',
+            'amount' => 'amount',
+            'date' => ['paid_at'],
             'label' => ['id'],
             'columns' => ['order_id', 'amount', 'method', 'paid_at'],
             'fields' => [
@@ -268,6 +278,7 @@ return [
 
         'purchase' => [
             'group' => 'purchasing',
+            'date' => ['ordered_at'],
             'label' => ['order_number'],
             'columns' => ['supplier_id', 'warehouse_id', 'status', 'ordered_at'],
             'fields' => [
@@ -287,6 +298,8 @@ return [
 
         'purchase_item' => [
             'group' => 'purchasing',
+            'parent' => 'purchase_id',
+            'amount' => 'total',
             'label' => ['id'],
             'columns' => ['purchase_id', 'item_id', 'quantity', 'received_quantity', 'unit_price', 'total'],
             'fields' => [

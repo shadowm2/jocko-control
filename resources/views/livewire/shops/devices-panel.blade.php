@@ -13,7 +13,7 @@
                 <flux:text>{{ __('ui.devices.empty') }}</flux:text>
             </div>
         @else
-            <div class="-mx-6 overflow-x-auto">
+            <div class="table-card -mx-6 overflow-x-auto">
                 <flux:table>
                     <flux:table.columns>
                         <flux:table.column>{{ __('ui.devices.name') }}</flux:table.column>

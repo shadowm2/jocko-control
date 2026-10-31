@@ -26,7 +26,7 @@
         @endif
     </div>
 
-    <flux:card class="overflow-x-auto p-0!" wire:loading.class="opacity-60" wire:target="action,shop,nextPage,previousPage">
+    <flux:card class="table-card overflow-x-auto p-0!" wire:loading.class="opacity-60" wire:target="action,shop,nextPage,previousPage">
         @if ($logs->isEmpty())
             <div class="px-6 py-14 text-center">
                 <flux:icon.clipboard-document-list class="mx-auto mb-3 size-10 text-zinc-300" />

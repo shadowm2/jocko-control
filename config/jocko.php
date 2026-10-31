@@ -93,8 +93,8 @@ return [
         'rate_limit_per_device' => (int) env('JOCKO_API_RATE_LIMIT_PER_DEVICE', 120),
 
         // Suggested intervals returned from GET /device/me.
-        'heartbeat_interval_seconds' => 60,
-        'command_poll_interval_seconds' => 60,
+        'heartbeat_interval_seconds' => 15,
+        'command_poll_interval_seconds' => 15,
     ],
 
 ];

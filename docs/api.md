@@ -79,8 +79,8 @@ curl -s "$CONTROL/api/v1/device/me" \
       "timezone": "Asia/Tehran"
     },
     "config": {
-      "heartbeat_interval_seconds": 60,
-      "command_poll_interval_seconds": 60,
+      "heartbeat_interval_seconds": 15,
+      "command_poll_interval_seconds": 15,
       "max_events_per_batch": 100,
       "max_event_payload_bytes": 65536
     },
