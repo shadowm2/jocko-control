@@ -78,7 +78,7 @@
         @if ($commands->isEmpty())
             <flux:text class="py-4 text-center text-zinc-500">{{ __('ui.commands.empty') }}</flux:text>
         @else
-            <div class="-mx-6 overflow-x-auto">
+            <div class="table-card -mx-6 overflow-x-auto">
                 <flux:table>
                     <flux:table.columns>
                         <flux:table.column>{{ __('ui.commands.type') }}</flux:table.column>

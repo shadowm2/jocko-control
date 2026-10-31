@@ -25,7 +25,7 @@
         @endif
     </div>
 
-    <flux:card class="overflow-x-auto p-0!" wire:loading.class="opacity-60" wire:target="shop,search,nextPage,previousPage">
+    <flux:card class="table-card overflow-x-auto p-0!" wire:loading.class="opacity-60" wire:target="shop,search,nextPage,previousPage">
         @if ($events->isEmpty())
             <div class="px-6 py-14 text-center">
                 <flux:icon.inbox class="mx-auto mb-3 size-10 text-zinc-300" />

@@ -40,6 +40,22 @@
     margin-bottom: 0;
 }
 
+/*
+ * Flux zeroes the outer padding of a table's first and last cell
+ * (`first:ps-0 last:pe-0`) because it expects the table inside a padded
+ * container. A table that fills its card edge to edge (`table-card`: a card
+ * with its padding removed, or a table pulled out with `-mx-6`) has none, so
+ * give the edge cells the card's own 1.5rem back.
+ * Unlayered, so it wins over Flux's utility classes.
+ */
+.table-card :is(th, td):first-child {
+    padding-inline-start: calc(var(--spacing) * 6);
+}
+
+.table-card :is(th, td):last-child {
+    padding-inline-end: calc(var(--spacing) * 6);
+}
+
 [x-cloak] {
     display: none !important;
 }
