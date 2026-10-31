@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Events\ShopChanged;
 use Illuminate\Container\Attributes\Singleton;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -43,7 +44,11 @@ class ShopChangeBroadcaster
             try {
                 ShopChanged::dispatch($shopId, array_keys($scopes));
             } catch (Throwable $e) {
-                Log::warning('Could not announce a shop change to the open pages.', ['shop_id' => $shopId, 'exception' => $e::class]);
+                // With the socket server down this fails on every batch a shop pushes:
+                // say so once a minute, not once per request.
+                if (Cache::add('shop-change-announcement-failed', true, 60)) {
+                    Log::warning('Could not announce a shop change to the open pages (is the Reverb socket server running?).', ['shop_id' => $shopId, 'exception' => $e::class]);
+                }
             }
         }
     }

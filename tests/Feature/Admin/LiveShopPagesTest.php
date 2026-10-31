@@ -12,6 +12,7 @@ use App\Services\ShopChangeBroadcaster;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Livewire\Livewire;
 use Tests\Concerns\BuildsShopMirror;
 use Tests\Concerns\CreatesDevices;
@@ -86,6 +87,20 @@ class LiveShopPagesTest extends TestCase
             ->assertJsonPath('meta.accepted', 1);
 
         $this->assertDatabaseHas('shop_records', ['entity' => 'order', 'local_id' => 1]);
+    }
+
+    public function test_a_down_socket_server_is_logged_once_a_minute_not_on_every_request(): void
+    {
+        Event::listen(ShopChanged::class, fn () => throw new \RuntimeException('socket server is down'));
+        Log::spy();
+        $broadcaster = app(ShopChangeBroadcaster::class);
+
+        foreach (range(1, 3) as $i) {
+            $broadcaster->changed('shop-1', ShopChanged::DATA);
+            $broadcaster->flush();
+        }
+
+        Log::shouldHaveReceived('warning')->once();
     }
 
     public function test_only_signed_in_administrators_may_listen_to_a_shop(): void

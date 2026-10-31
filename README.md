@@ -82,7 +82,7 @@ A shop's pages (overview, dashboard, orders, all data) update the moment its dat
 A small dot next to the shop's tabs shows whether the page is live. Without the socket server the pages still work: each keeps a slow poll (every 60 s while visible) as a fallback, and an announcement that cannot be delivered is logged and dropped, so a device never waits for it.
 
 ```bash
-php artisan reverb:install      # once: generates REVERB_APP_ID / _KEY / _SECRET in .env
+php artisan reverb:install      # once: generates REVERB_APP_ID / _KEY / _SECRET in .env (running it again replaces them: restart reverb and rebuild the assets)
 php artisan reverb:start        # the socket server (port 8080); `composer dev` starts it for you locally
 npm run build                   # the browser needs VITE_REVERB_* at build time
 ```
