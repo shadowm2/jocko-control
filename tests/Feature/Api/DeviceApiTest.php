@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Api;
 
+use App\Enums\CommandType;
 use App\Enums\DeviceStatus;
 use App\Models\Shop;
 use App\Models\ShopDevice;
 use App\Models\User;
 use App\Services\DeviceManagementService;
+use App\Services\RemoteCommandService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\CreatesDevices;
 use Tests\TestCase;
@@ -130,13 +132,40 @@ class DeviceApiTest extends TestCase
         $issued = $this->issueDevice();
 
         $this->postJson('/api/v1/device/heartbeat', [
-            'app_version' => str_repeat('x', 51),
             'local_status' => ['state' => 'exploding'],
             'sync' => ['status' => 'maybe'],
         ], $this->bearer($issued))
             ->assertUnprocessable()
             ->assertJsonPath('error.code', 'validation_failed')
-            ->assertJsonStructure(['error' => ['details' => ['app_version', 'local_status.state', 'sync.status']]]);
+            ->assertJsonStructure(['error' => ['details' => ['local_status.state', 'sync.status']]]);
+    }
+
+    public function test_overlong_version_labels_are_cut_instead_of_rejecting_the_heartbeat(): void
+    {
+        $issued = $this->issueDevice();
+        $schema = '2026_10_29_100000_create_control_outbox_events_table';
+
+        $this->postJson('/api/v1/device/heartbeat', [
+            'app_version' => str_repeat('v', 80),
+            'database_schema_version' => $schema,
+        ], $this->bearer($issued))->assertOk();
+
+        $device = $issued->device->fresh();
+        $this->assertSame(str_repeat('v', 50), $device->app_version);
+        $this->assertSame(mb_substr($schema, 0, 50), $device->database_schema_version);
+    }
+
+    public function test_a_heartbeat_with_overlong_labels_still_announces_pending_commands(): void
+    {
+        $issued = $this->issueDevice();
+
+        app(RemoteCommandService::class)->queue(User::factory()->create(), $issued->device, CommandType::CheckVersion);
+
+        $this->postJson('/api/v1/device/heartbeat', [
+            'database_schema_version' => str_repeat('m', 120),
+        ], $this->bearer($issued))
+            ->assertOk()
+            ->assertJsonPath('data.pending_commands', 1);
     }
 
     public function test_a_revoked_device_is_denied_even_with_its_old_token(): void
