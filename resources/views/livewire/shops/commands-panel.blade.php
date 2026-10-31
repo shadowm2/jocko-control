@@ -1,6 +1,6 @@
 @php use App\Enums\CommandType; use App\Support\Format; @endphp
 
-<div wire:poll.20s>
+<div wire:poll.60s.visible>
     <flux:card class="space-y-6">
         <flux:heading size="lg">{{ __('ui.commands.title') }}</flux:heading>
 

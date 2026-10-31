@@ -1,6 +1,6 @@
 @php use App\Support\Format; @endphp
 
-<div class="space-y-6" wire:poll.10s.visible>
+<div class="space-y-6" wire:poll.60s.visible>
     <div>
         <flux:button variant="subtle" size="sm" icon="arrow-right" class="mb-2" :href="route('shops.data', $shop)" wire:navigate>{{ __('ui.shop_data.title') }} — {{ $shop->name }}</flux:button>
         <flux:heading size="xl" level="1">{{ __('ui.shop_data.entities.'.$entity) }}</flux:heading>

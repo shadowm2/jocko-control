@@ -3,6 +3,7 @@
 namespace App\Livewire\Shops\Data;
 
 use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Livewire\Concerns\RefreshesLive;
 use App\Models\Shop;
 use App\Models\ShopRecord;
 use App\Services\ShopDataCatalog;
@@ -19,7 +20,7 @@ use Livewire\WithPagination;
  */
 class Records extends Component
 {
-    use AuthorizesAdmin, WithPagination;
+    use AuthorizesAdmin, RefreshesLive, WithPagination;
 
     #[Locked]
     public string $shopId;

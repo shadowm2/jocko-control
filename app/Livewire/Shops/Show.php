@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Shops;
 
+use App\Events\ShopChanged;
 use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Livewire\Concerns\RefreshesLive;
 use App\Models\AuditLog;
 use App\Models\Shop;
 use App\Models\SyncEvent;
@@ -17,10 +19,18 @@ use Livewire\Component;
 
 class Show extends Component
 {
-    use AuthorizesAdmin;
+    use AuthorizesAdmin, RefreshesLive;
 
     #[Locked]
     public string $shopId;
+
+    /**
+     * @return list<string>
+     */
+    protected function liveScopes(): array
+    {
+        return [ShopChanged::DATA, ShopChanged::COMMANDS];
+    }
 
     public function mount(Shop $shop): void
     {

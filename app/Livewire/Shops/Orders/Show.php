@@ -3,6 +3,7 @@
 namespace App\Livewire\Shops\Orders;
 
 use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Livewire\Concerns\RefreshesLive;
 use App\Models\Shop;
 use App\Models\ShopRecord;
 use App\Services\ShopOrders;
@@ -15,7 +16,7 @@ use Livewire\Component;
  */
 class Show extends Component
 {
-    use AuthorizesAdmin;
+    use AuthorizesAdmin, RefreshesLive;
 
     #[Locked]
     public string $shopId;

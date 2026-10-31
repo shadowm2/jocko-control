@@ -3,6 +3,7 @@
 namespace App\Livewire\Shops\Data;
 
 use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Livewire\Concerns\RefreshesLive;
 use App\Models\Shop;
 use App\Models\ShopRecord;
 use App\Services\ShopDataCatalog;
@@ -16,7 +17,7 @@ use Livewire\Component;
  */
 class Show extends Component
 {
-    use AuthorizesAdmin;
+    use AuthorizesAdmin, RefreshesLive;
 
     private const CHILD_LIMIT = 100;
 

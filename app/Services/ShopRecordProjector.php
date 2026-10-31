@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\SyncEventHandler;
+use App\Events\ShopChanged;
 use App\Models\ShopRecord;
 use App\Models\SyncEvent;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -19,7 +20,10 @@ use InvalidArgumentException;
  */
 class ShopRecordProjector implements SyncEventHandler
 {
-    public function __construct(private readonly ShopDataCatalog $catalog) {}
+    public function __construct(
+        private readonly ShopDataCatalog $catalog,
+        private readonly ShopChangeBroadcaster $broadcaster,
+    ) {}
 
     public function supports(SyncEvent $event): bool
     {
@@ -56,6 +60,8 @@ class ShopRecordProjector implements SyncEventHandler
             // Lost the race to create the row: it exists now, so update it.
             $this->apply($key, $attributes);
         }
+
+        $this->broadcaster->changed($event->shop_id, ShopChanged::DATA);
     }
 
     /**

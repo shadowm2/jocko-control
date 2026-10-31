@@ -3,6 +3,7 @@
 namespace App\Livewire\Shops;
 
 use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Livewire\Concerns\RefreshesLive;
 use App\Models\Shop;
 use App\Models\ShopRecord;
 use App\Services\ShopDashboardMetrics;
@@ -17,7 +18,7 @@ use Livewire\Component;
  */
 class Dashboard extends Component
 {
-    use AuthorizesAdmin;
+    use AuthorizesAdmin, RefreshesLive;
 
     #[Locked]
     public string $shopId;

@@ -202,7 +202,7 @@ class ShopOrdersPagesTest extends TestCase
         $this->get(route('shops.orders.show', [$this->shop, $customer]))->assertNotFound();
     }
 
-    public function test_the_shop_screens_refresh_themselves_while_they_are_open(): void
+    public function test_the_shop_screens_listen_for_changes_and_keep_a_slow_poll_as_a_fallback(): void
     {
         $record = ShopRecord::where('entity', 'user')->firstOrFail();
 
@@ -214,7 +214,10 @@ class ShopOrdersPagesTest extends TestCase
             route('shops.data.entity', [$this->shop, 'user']),
             route('shops.data.show', [$this->shop, 'user', $record]),
         ] as $url) {
-            $this->get($url)->assertOk()->assertSee('wire:poll.10s.visible', false);
+            $this->get($url)
+                ->assertOk()
+                ->assertSee('wire:poll.60s.visible', false)
+                ->assertSee('echo-private:shops.'.$this->shop->getKey().',.ShopChanged', false);
         }
     }
 

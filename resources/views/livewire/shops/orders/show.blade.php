@@ -6,7 +6,7 @@
     $row = $invoice['order'];
 @endphp
 
-<div class="space-y-6" wire:poll.10s.visible>
+<div class="space-y-6" wire:poll.60s.visible>
     <div>
         <flux:button variant="subtle" size="sm" icon="arrow-right" class="mb-2" :href="route('shops.orders', $shop)" wire:navigate>{{ __('ui.shop_orders.title') }} — {{ $shop->name }}</flux:button>
     </div>

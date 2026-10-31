@@ -5,6 +5,7 @@ namespace App\Livewire\Shops\Orders;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Livewire\Concerns\RefreshesLive;
 use App\Models\Shop;
 use App\Services\ShopOrders;
 use Illuminate\Contracts\View\View;
@@ -18,7 +19,7 @@ use Livewire\WithPagination;
  */
 class Index extends Component
 {
-    use AuthorizesAdmin, WithPagination;
+    use AuthorizesAdmin, RefreshesLive, WithPagination;
 
     #[Locked]
     public string $shopId;
