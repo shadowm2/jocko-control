@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * from its synchronization events. `data` holds only the allowlisted fields
  * of App\Services\ShopDataCatalog; `local_id` is the shop's own primary key.
  */
-#[Fillable(['shop_id', 'entity', 'local_id', 'aggregate_id', 'label', 'data', 'source_occurred_at', 'removed_at'])]
+#[Fillable(['shop_id', 'entity', 'local_id', 'aggregate_id', 'label', 'parent_id', 'amount', 'dated_at', 'data', 'source_occurred_at', 'removed_at'])]
 class ShopRecord extends Model
 {
     /** @use HasFactory<ShopRecordFactory> */
@@ -32,6 +32,9 @@ class ShopRecord extends Model
     {
         return [
             'local_id' => 'integer',
+            'parent_id' => 'integer',
+            'amount' => 'decimal:4',
+            'dated_at' => 'datetime',
             'data' => 'array',
             'source_occurred_at' => 'datetime',
             'removed_at' => 'datetime',

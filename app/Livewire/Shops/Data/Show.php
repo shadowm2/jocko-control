@@ -50,7 +50,11 @@ class Show extends Component
                 ->forShop($this->shopId)
                 ->ofEntity($childEntity)
                 ->alive()
-                ->where('data->'.$foreignKey, $record->local_id);
+                ->when(
+                    $catalog->parentField($childEntity) === $foreignKey,
+                    fn ($query) => $query->where('parent_id', $record->local_id),
+                    fn ($query) => $query->where('data->'.$foreignKey, $record->local_id),
+                );
 
             $rows = (clone $query)->orderBy('local_id')->limit(self::CHILD_LIMIT)->get();
 
@@ -83,16 +87,15 @@ class Show extends Component
      */
     private function orderSummary(ShopRecord $order): array
     {
-        $sum = fn (string $entity, string $field): float => (float) ShopRecord::query()
+        $sum = fn (string $entity): float => (float) ShopRecord::query()
             ->forShop($this->shopId)
             ->ofEntity($entity)
             ->alive()
-            ->where('data->order_id', $order->local_id)
-            ->get()
-            ->sum(fn (ShopRecord $row): float => (float) $row->field($field));
+            ->where('parent_id', $order->local_id)
+            ->sum('amount');
 
-        $total = $sum('order_item', 'total');
-        $paid = $sum('payment', 'amount');
+        $total = $sum('order_item');
+        $paid = $sum('payment');
 
         return ['total' => $total, 'paid' => $paid, 'balance' => $total - $paid];
     }

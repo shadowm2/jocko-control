@@ -181,6 +181,65 @@ class ShopMirrorProjectionTest extends TestCase
         $this->assertSame('completed', ShopRecord::sole()->field('status'));
     }
 
+    public function test_the_indexed_columns_hold_the_parent_the_amount_and_the_date_a_record_counts_for(): void
+    {
+        $issued = $this->issueDevice();
+
+        $this->postJson('/api/v1/sync/events', ['events' => [
+            $this->recordEvent('order_item', 'created', ['id' => 3, 'order_id' => 7, 'total' => '300000.0000', 'created_at' => '2026-10-20T08:00:00.000000Z']),
+            $this->recordEvent('payment', 'created', ['id' => 4, 'order_id' => 7, 'amount' => '100000.0000', 'paid_at' => '2026-10-22T00:00:00.000000Z', 'created_at' => '2026-10-25T08:00:00.000000Z']),
+            $this->recordEvent('purchase', 'created', ['id' => 5, 'order_number' => 'PO-5', 'ordered_at' => '2026-10-21T09:00:00.000000Z', 'created_at' => '2026-10-19T09:00:00.000000Z']),
+            $this->recordEvent('purchase', 'created', ['id' => 6, 'order_number' => 'PO-6', 'ordered_at' => null, 'created_at' => '2026-10-18T09:00:00.000000Z']),
+            $this->recordEvent('brand', 'created', ['id' => 8, 'name' => 'Bosch']),
+        ]], $this->bearer($issued))->assertOk();
+
+        $item = ShopRecord::where('entity', 'order_item')->sole();
+        $this->assertSame(7, $item->parent_id);
+        $this->assertSame('300000.0000', $item->amount);
+        $this->assertSame('2026-10-20 08:00:00', $item->dated_at->utc()->format('Y-m-d H:i:s'));
+
+        $payment = ShopRecord::where('entity', 'payment')->sole();
+        $this->assertSame('100000.0000', $payment->amount);
+        $this->assertSame('2026-10-22', $payment->dated_at->utc()->format('Y-m-d'), 'a payment counts on the day it was paid');
+
+        $this->assertSame('2026-10-21', ShopRecord::where('label', 'PO-5')->sole()->dated_at->utc()->format('Y-m-d'));
+        $this->assertSame('2026-10-18', ShopRecord::where('label', 'PO-6')->sole()->dated_at->utc()->format('Y-m-d'), 'no ordered_at falls back to created_at');
+
+        $brand = ShopRecord::where('entity', 'brand')->sole();
+        $this->assertNull($brand->parent_id);
+        $this->assertNull($brand->amount);
+        $this->assertNull($brand->dated_at);
+    }
+
+    public function test_a_garbage_amount_or_parent_is_ignored_rather_than_stored(): void
+    {
+        $issued = $this->issueDevice();
+
+        $this->postJson('/api/v1/sync/events', ['events' => [
+            $this->recordEvent('order_item', 'created', ['id' => 3, 'order_id' => 'seven', 'total' => 'a lot']),
+        ]], $this->bearer($issued))->assertOk();
+
+        $item = ShopRecord::sole();
+        $this->assertNull($item->parent_id);
+        $this->assertNull($item->amount);
+    }
+
+    public function test_replaying_the_inbox_backfills_rows_projected_before_the_columns_existed(): void
+    {
+        $issued = $this->issueDevice();
+        $this->postJson('/api/v1/sync/events', ['events' => [
+            $this->recordEvent('order_item', 'created', ['id' => 3, 'order_id' => 7, 'total' => '300000.0000', 'created_at' => '2026-10-20T08:00:00.000000Z']),
+        ]], $this->bearer($issued))->assertOk();
+        ShopRecord::query()->update(['parent_id' => null, 'amount' => null, 'dated_at' => null]);
+
+        $this->artisan('jocko:project-events')->assertSuccessful();
+
+        $item = ShopRecord::sole();
+        $this->assertSame(7, $item->parent_id);
+        $this->assertSame('300000.0000', $item->amount);
+        $this->assertNotNull($item->dated_at);
+    }
+
     public function test_the_projector_only_supports_events_named_after_their_entity(): void
     {
         $projector = app(ShopRecordProjector::class);

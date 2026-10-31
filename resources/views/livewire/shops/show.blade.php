@@ -10,7 +10,6 @@
         </div>
 
         <div class="flex flex-wrap gap-2">
-            <flux:button icon="circle-stack" :href="route('shops.data', $shop)" wire:navigate>{{ __('ui.shop_data.open') }}</flux:button>
             <flux:button icon="pencil-square" :href="route('shops.edit', $shop)" wire:navigate>{{ __('ui.common.edit') }}</flux:button>
 
             @if ($shop->isActive())
@@ -24,6 +23,8 @@
             @endif
         </div>
     </div>
+
+    <x-shop-tabs :shop="$shop" current="overview" />
 
     @if ($shop->isSuspended())
         <flux:callout variant="warning" icon="exclamation-triangle" :heading="__('ui.shops.suspended_banner')" />

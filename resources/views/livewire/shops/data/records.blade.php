@@ -1,6 +1,6 @@
 @php use App\Support\Format; @endphp
 
-<div class="space-y-6">
+<div class="space-y-6" wire:poll.10s.visible>
     <div>
         <flux:button variant="subtle" size="sm" icon="arrow-right" class="mb-2" :href="route('shops.data', $shop)" wire:navigate>{{ __('ui.shop_data.title') }} — {{ $shop->name }}</flux:button>
         <flux:heading size="xl" level="1">{{ __('ui.shop_data.entities.'.$entity) }}</flux:heading>
@@ -22,7 +22,7 @@
         @endif
     </div>
 
-    <flux:card class="overflow-x-auto p-0!" wire:loading.class="opacity-60" wire:target="search,scope,nextPage,previousPage">
+    <flux:card class="table-card overflow-x-auto p-0!" wire:loading.class="opacity-60" wire:target="search,scope,nextPage,previousPage">
         @if ($records->isEmpty())
             <div class="px-6 py-14 text-center">
                 <flux:icon.inbox class="mx-auto mb-3 size-10 text-zinc-300" />

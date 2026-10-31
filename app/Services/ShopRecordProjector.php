@@ -40,6 +40,9 @@ class ShopRecordProjector implements SyncEventHandler
         $attributes = [
             'aggregate_id' => $event->aggregate_id,
             'label' => $this->catalog->label($entity, $data),
+            'parent_id' => $this->integerField($entity, $data, $this->catalog->parentField($entity)),
+            'amount' => $this->amount($entity, $data),
+            'dated_at' => $this->catalog->datedAt($entity, $data),
             'data' => $data,
             'source_occurred_at' => $event->occurred_at,
             'removed_at' => $this->removedAt($event, $data),
@@ -76,6 +79,27 @@ class ShopRecordProjector implements SyncEventHandler
 
             $record->update($attributes);
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function integerField(string $entity, array $data, ?string $field): ?int
+    {
+        $value = $field === null ? null : ($data[$field] ?? null);
+
+        return is_int($value) ? $value : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function amount(string $entity, array $data): ?string
+    {
+        $field = $this->catalog->amountField($entity);
+        $value = $field === null ? null : ($data[$field] ?? null);
+
+        return is_numeric($value) ? (string) $value : null;
     }
 
     /**

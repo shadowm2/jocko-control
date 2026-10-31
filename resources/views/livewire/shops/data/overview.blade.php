@@ -1,11 +1,13 @@
 @php use App\Support\Format; @endphp
 
-<div class="space-y-6">
+<div class="space-y-6" wire:poll.10s.visible>
     <div>
         <flux:button variant="subtle" size="sm" icon="arrow-right" class="mb-2" :href="route('shops.show', $shop)" wire:navigate>{{ $shop->name }}</flux:button>
         <flux:heading size="xl" level="1">{{ __('ui.shop_data.title') }}</flux:heading>
         <flux:subheading>{{ __('ui.shop_data.subtitle', ['shop' => $shop->name]) }}</flux:subheading>
     </div>
+
+    <x-shop-tabs :shop="$shop" current="data" />
 
     <flux:callout icon="eye" :text="__('ui.shop_data.read_only_notice')" />
 

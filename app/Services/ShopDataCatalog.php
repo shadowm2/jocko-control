@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 
 /**
@@ -9,7 +10,7 @@ use Illuminate\Support\Str;
  * fields of each are kept, and how a record is named. The definition lives in
  * config/shop_data.php.
  *
- * @phpstan-type EntityDefinition array{group: string, label: list<string>, columns: list<string>, fields: array<string, string>, children?: array<string, string>}
+ * @phpstan-type EntityDefinition array{group: string, label: list<string>, columns: list<string>, fields: array<string, string>, children?: array<string, string>, parent?: string, amount?: string, date?: list<string>}
  */
 class ShopDataCatalog
 {
@@ -73,6 +74,41 @@ class ShopDataCatalog
     public function children(string $entity): array
     {
         return $this->definition($entity)['children'] ?? [];
+    }
+
+    /**
+     * The foreign key kept in the indexed parent_id column, if any.
+     */
+    public function parentField(string $entity): ?string
+    {
+        return $this->definition($entity)['parent'] ?? null;
+    }
+
+    /**
+     * The field kept in the indexed amount column, if any.
+     */
+    public function amountField(string $entity): ?string
+    {
+        return $this->definition($entity)['amount'] ?? null;
+    }
+
+    /**
+     * The date a record counts for: the first configured date field it has,
+     * else when it was created in the shop.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function datedAt(string $entity, array $data): ?CarbonImmutable
+    {
+        foreach ([...($this->definition($entity)['date'] ?? []), 'created_at'] as $field) {
+            $value = $data[$field] ?? null;
+
+            if (is_string($value) && $value !== '') {
+                return CarbonImmutable::parse($value)->utc();
+            }
+        }
+
+        return null;
     }
 
     /**
