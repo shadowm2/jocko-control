@@ -95,8 +95,8 @@ Tells the server the device is alive and reports diagnostics. The server records
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `app_version` | string ≤ 50, optional | |
-| `database_schema_version` | string ≤ 50, optional | |
+| `app_version` | string, optional | Longer than 50 characters is cut to 50, not rejected. |
+| `database_schema_version` | string, optional | Longer than 50 characters is cut to 50, not rejected. |
 | `local_status.state` | `idle`, `syncing`, `error`, `maintenance`, optional | |
 | `local_status.pending_events` | integer ≥ 0, optional | Events waiting to be pushed. |
 | `local_status.database_ok` | boolean, optional | |
