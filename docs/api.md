@@ -256,7 +256,7 @@ Command types and parameters (all optional):
 
 | `type` | `payload` |
 | --- | --- |
-| `sync_now` | `full` (boolean) |
+| `sync_now` | `full` (boolean): also resend a fresh copy of every record, not only what is waiting. The shop's result is `{queued, pushed, rejected, remaining}`. |
 | `check_version` | none |
 | `collect_diagnostics` | `include_logs` (boolean), `since_minutes` (1–1440) |
 | `refresh_config` | none |

@@ -145,7 +145,7 @@
                     <flux:heading class="mb-2">{{ __('ui.shops.recent_events') }}</flux:heading>
                     @forelse ($activity['events'] as $event)
                         <div class="flex justify-between gap-3 border-t border-zinc-100 py-2 text-sm first:border-t-0 dark:border-zinc-800">
-                            <span dir="ltr">{{ $event->event_type }}</span>
+                            <x-event-type :type="$event->event_type" />
                             <x-datetime :value="$event->received_at" ago class="text-xs text-zinc-500" />
                         </div>
                     @empty

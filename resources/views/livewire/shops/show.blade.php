@@ -78,7 +78,10 @@
         @forelse ($events as $event)
             <div wire:key="event-{{ $event->id }}" class="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 py-3 text-sm first:border-t-0 dark:border-zinc-800">
                 <div class="min-w-0">
-                    <span class="font-medium" dir="ltr">{{ $event->event_type }}</span>
+                    <x-event-type
+                        class="font-medium"
+                        :type="$event->event_type"
+                    />
                     <span class="text-zinc-500">· {{ $event->device?->name }}</span>
                 </div>
                 <x-datetime :value="$event->received_at" ago class="text-xs text-zinc-500" />
