@@ -1,0 +1,667 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/DeviceController.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/DeviceController.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/RemoteCommandController.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/RemoteCommandController.php
+
+		-
+			message: '#^Instanceof between App\\Models\\User\|null and App\\Models\\ShopDevice will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: app/Http/Middleware/AuthorizeDevice.php
+
+		-
+			message: '#^Property App\\Http\\Middleware\\AuthorizeDevice\:\:\$devices is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: app/Http/Middleware/AuthorizeDevice.php
+
+		-
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
+			count: 1
+			path: app/Http/Middleware/AuthorizeDevice.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Http/Middleware/AuthorizeDevice.php
+
+		-
+			message: '#^Parameter \#2 \$default of method Illuminate\\Http\\Request\:\:header\(\) expects array\<string, string\>\|string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Middleware/LimitRequestSize.php
+
+		-
+			message: '#^Unable to resolve the template type TDefault in call to method Illuminate\\Http\\Request\:\:header\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Middleware/LimitRequestSize.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Api\\V1\\AcknowledgeCommandRequest\:\:after\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Api/V1/AcknowledgeCommandRequest.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Requests/Api/V1/AcknowledgeCommandRequest.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\Shop\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Resources/Api/V1/DeviceResource.php
+
+		-
+			message: '#^Cannot access property \$name on App\\Models\\Shop\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Resources/Api/V1/DeviceResource.php
+
+		-
+			message: '#^Cannot access property \$slug on App\\Models\\Shop\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Resources/Api/V1/DeviceResource.php
+
+		-
+			message: '#^Cannot access property \$timezone on App\\Models\\Shop\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Resources/Api/V1/DeviceResource.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Resources/Api/V1/DeviceResource.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Http/Resources/Api/V1/RemoteCommandResource.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Http/Resources/Api/V1/RemoteCommandResource.php
+
+		-
+			message: '#^Cannot access property \$value on App\\Enums\\AuditAction\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Audit/Index.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Shops\\CommandsPanel\:\:\$shop\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Livewire/Shops/CommandsPanel.php
+
+		-
+			message: '#^Parameter \#1 \$admin of method App\\Services\\RemoteCommandService\:\:queue\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Shops/CommandsPanel.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Shops\\Dashboard\:\:\$shop\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Livewire/Shops/Dashboard.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Shops\\Data\\Overview\:\:\$shop\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Shops/Data/Overview.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Shops\\DevicesPanel\:\:\$shop\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Livewire/Shops/DevicesPanel.php
+
+		-
+			message: '#^Parameter \#2 \$admin of method App\\Services\\DeviceManagementService\:\:revoke\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Shops/DevicesPanel.php
+
+		-
+			message: '#^Parameter \#2 \$admin of method App\\Services\\DeviceManagementService\:\:rotateToken\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Shops/DevicesPanel.php
+
+		-
+			message: '#^Parameter \#3 \$admin of method App\\Services\\DeviceManagementService\:\:register\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Shops/DevicesPanel.php
+
+		-
+			message: '#^Parameter \#2 \$admin of method App\\Services\\ShopManagementService\:\:create\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Shops/Form.php
+
+		-
+			message: '#^Parameter \#3 \$admin of method App\\Services\\ShopManagementService\:\:update\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Shops/Form.php
+
+		-
+			message: '#^Cannot access property \$value on App\\Enums\\ShopStatus\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Shops/Index.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Shops\\Show\:\:\$shop\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Livewire/Shops/Show.php
+
+		-
+			message: '#^Parameter \#2 \$admin of method App\\Services\\ShopManagementService\:\:reactivate\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Shops/Show.php
+
+		-
+			message: '#^Parameter \#2 \$admin of method App\\Services\\ShopManagementService\:\:suspend\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Shops/Show.php
+
+		-
+			message: '#^Cannot call method lessThanOrEqualTo\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/RemoteCommand.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\CommandStatus\:\:Queued will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/RemoteCommand.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\ShopStatus\:\:Active will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/Shop.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\ShopStatus\:\:Suspended will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/Shop.php
+
+		-
+			message: '#^Cannot call method greaterThanOrEqualTo\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/ShopDevice.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\DeviceStatus\:\:Active will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/ShopDevice.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\DeviceStatus\:\:Revoked will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/ShopDevice.php
+
+		-
+			message: '#^Offset string on string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/ShopRecord.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Request\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/AuditLogger.php
+
+		-
+			message: '#^Cannot access property \$never_connected on App\\Models\\ShopDevice\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Cannot access property \$offline on App\\Models\\ShopDevice\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Cannot access property \$online on App\\Models\\ShopDevice\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Cannot access property \$total on App\\Models\\ShopDevice\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Cannot call method lessThan\(\) on string\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Comparison operation "\>\=" between \*NEVER\* and int results in an error\.$#'
+			identifier: greaterOrEqual.invalid
+			count: 2
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Left side of && is always false\.$#'
+			identifier: booleanAnd.leftAlwaysFalse
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Offset ''local_status'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Parameter \#1 \$array of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 3
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Right side of \|\| is always false\.$#'
+			identifier: booleanOr.rightAlwaysFalse
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between \*NEVER\* and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between null and null will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 2
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Ternary operator condition is always false\.$#'
+			identifier: ternary.alwaysFalse
+			count: 1
+			path: app/Services/DashboardMetrics.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\>\:\:\$shop_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/DeviceManagementService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\ShopDevice but returns App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\>\.$#'
+			identifier: return.type
+			count: 2
+			path: app/Services/DeviceManagementService.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\>\:\:createToken\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/DeviceManagementService.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\>\:\:isRevoked\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Services/DeviceManagementService.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\>\:\:tokens\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Services/DeviceManagementService.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\>\:\:update\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/DeviceManagementService.php
+
+		-
+			message: '#^Cannot assign offset ''local_status'' to array\|string\.$#'
+			identifier: offsetAssign.dimType
+			count: 1
+			path: app/Services/DeviceManagementService.php
+
+		-
+			message: '#^Parameter \#1 \$device of class App\\Services\\IssuedDevice constructor expects App\\Models\\ShopDevice, App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/DeviceManagementService.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\RemoteCommand\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\RemoteCommand\>\:\:hasPassedExpiry\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/RemoteCommandService.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\RemoteCommand\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\RemoteCommand\>\:\:isQueued\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/RemoteCommandService.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Services/RemoteCommandService.php
+
+		-
+			message: '#^Cannot call method getKey\(\) on App\\Models\\ShopDevice\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/RemoteCommandService.php
+
+		-
+			message: '#^Cannot call method isSuspended\(\) on App\\Models\\Shop\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/RemoteCommandService.php
+
+		-
+			message: '#^Method App\\Services\\RemoteCommandService\:\:acknowledge\(\) should return App\\Services\\CommandAcknowledgement but returns App\\Services\\CommandAcknowledgement\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/RemoteCommandService.php
+
+		-
+			message: '#^Parameter \#1 \$command of method App\\Services\\RemoteCommandService\:\:expire\(\) expects App\\Models\\RemoteCommand, App\\Models\\RemoteCommand\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\RemoteCommand\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/RemoteCommandService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\CommandStatus will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Services/RemoteCommandService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\CommandStatus\:\:Expired will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Services/RemoteCommandService.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$dated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ShopDashboardMetrics.php
+
+		-
+			message: '#^Method App\\Services\\ShopDashboardMetrics\:\:presentLowStock\(\) should return list\<array\{record\: App\\Models\\ShopRecord, item\: string\|null, warehouse\: string\|null, quantity\: mixed, minimum\: mixed\}\> but returns array\<int, array\{record\: App\\Models\\ShopRecord, item\: string\|null, warehouse\: string\|null, quantity\: mixed, minimum\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/ShopDashboardMetrics.php
+
+		-
+			message: '#^Method App\\Services\\ShopDashboardMetrics\:\:recentPurchases\(\) should return list\<array\{record\: App\\Models\\ShopRecord, number\: string, supplier\: string\|null, warehouse\: string\|null, total\: float\}\> but returns array\<int, array\{record\: App\\Models\\ShopRecord, number\: string, supplier\: mixed, warehouse\: mixed, total\: float\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/ShopDashboardMetrics.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Shop\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Shop\>\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ShopManagementService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\Shop but returns App\\Models\\Shop\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Shop\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/ShopManagementService.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\Shop\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Shop\>\:\:update\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/ShopManagementService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string and App\\Enums\\ShopStatus will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Services/ShopManagementService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ShopRecord\:\:\$line_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ShopRecord\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Cannot access property \$value on App\\Enums\\OrderStatus\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Cannot call method toImmutable\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Method App\\Services\\ShopOrders\:\:invoice\(\) should return array\{order\: array\{record\: App\\Models\\ShopRecord, number\: string, date\: Carbon\\CarbonImmutable\|null, status\: App\\Enums\\OrderStatus\|null, payment\: App\\Enums\\PaymentStatus, customer\: string\|null, mobile\: string\|null, car\: string\|null, \.\.\.\}, lines\: list\<array\{record\: App\\Models\\ShopRecord, item\: string\|null, unit\: string\|null, quantity\: mixed, unit_price\: mixed, total\: mixed\}\>, payments\: list\<array\{record\: App\\Models\\ShopRecord, method\: string\|null, paid_at\: mixed, amount\: mixed\}\>, total\: float, paid\: float, balance\: float\} but returns array\{order\: array\{record\: App\\Models\\ShopRecord, number\: string, date\: Carbon\\CarbonImmutable\|null, status\: App\\Enums\\OrderStatus\|null, payment\: App\\Enums\\PaymentStatus, customer\: string\|null, mobile\: string\|null, car\: string\|null, \.\.\.\}, lines\: array\<int, array\{record\: App\\Models\\ShopRecord, item\: string\|null, unit\: mixed, quantity\: mixed, unit_price\: mixed, total\: mixed\}\>, payments\: array\<int, array\{record\: App\\Models\\ShopRecord, method\: mixed, paid_at\: mixed, amount\: mixed\}\>, total\: float, paid\: float, balance\: float\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Method App\\Services\\ShopOrders\:\:rows\(\) should return list\<array\{record\: App\\Models\\ShopRecord, number\: string, date\: Carbon\\CarbonImmutable\|null, status\: App\\Enums\\OrderStatus\|null, payment\: App\\Enums\\PaymentStatus, customer\: string\|null, mobile\: string\|null, car\: string\|null, \.\.\.\}\> but returns array\<int, array\{record\: App\\Models\\ShopRecord, number\: string, date\: mixed, status\: App\\Enums\\OrderStatus\|null, payment\: App\\Enums\\PaymentStatus, customer\: string\|null, mobile\: mixed, car\: string\|null, \.\.\.\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,App\\Models\\ShopRecord\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Parameter \#1 \$sql of method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\ShopRecord\>\:\:whereRaw\(\) expects Illuminate\\Contracts\\Database\\Query\\Expression\|literal\-string, non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Parameter \#2 \$orderIds of method App\\Services\\ShopOrders\:\:money\(\) expects list\<int\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Parameter \#2 \$status of method App\\Services\\ShopOrders\:\:withPaymentStatus\(\) expects App\\Enums\\PaymentStatus, App\\Enums\\PaymentStatus\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Property App\\Services\\ShopOrders\:\:\$references is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,App\\Models\\ShopRecord\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:all\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>line_count" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>total" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/ShopOrders.php
+
+		-
+			message: '#^Method App\\Services\\ShopRecordProjector\:\:removedAt\(\) should return Illuminate\\Support\\Carbon\|null but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/ShopRecordProjector.php
+
+		-
+			message: '#^Parameter \#2 \$payload of method App\\Services\\ShopDataCatalog\:\:only\(\) expects array\<string, mixed\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ShopRecordProjector.php
+
+		-
+			message: '#^Property App\\Services\\SyncIngestionResult\:\:\$accepted \(array\<int, array\{index\: int, event_id\: string\}\>\) does not accept non\-empty\-array\<int, array\{index\: int, event_id\: string\|null\}\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Services/SyncEventIngestionService.php
+
+		-
+			message: '#^Property App\\Services\\SyncIngestionResult\:\:\$alreadyAccepted \(array\<int, array\{index\: int, event_id\: string\}\>\) does not accept non\-empty\-array\<int, array\{index\: int, event_id\: string\|null\}\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Services/SyncEventIngestionService.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: bootstrap/app.php
+
+		-
+			message: '#^Parameter \#1 \$string of function rtrim expects string, bool\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: config/filesystems.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, bool\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: config/sanctum.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\>\:\:\$shop_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: database/factories/RemoteCommandFactory.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\>\:\:\$shop_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: database/factories/SyncEventFactory.php
+
+		-
+			message: '#^Parameter \#2 \$data of function hash expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: database/factories/SyncEventFactory.php
+
+		-
+			message: '#^Cannot call method error\(\) on Illuminate\\Console\\Command\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: database/seeders/DemoSeeder.php
+
+		-
+			message: '#^Cannot call method info\(\) on Illuminate\\Console\\Command\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: database/seeders/DemoSeeder.php
+
+		-
+			message: '#^Cannot call method line\(\) on Illuminate\\Console\\Command\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: database/seeders/DemoSeeder.php
