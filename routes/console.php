@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('jocko:expire-commands')->everyMinute()->withoutOverlapping();
 Schedule::command('jocko:prune')->dailyAt('03:30')->withoutOverlapping();
+Schedule::command('jocko:check-devices')->everyFiveMinutes()->withoutOverlapping();

@@ -52,6 +52,13 @@ return [
         'offline_minutes' => (int) env('JOCKO_ALERT_OFFLINE_MINUTES', 60),
         'backlog_events' => (int) env('JOCKO_ALERT_BACKLOG_EVENTS', 500),
         'backlog_age_minutes' => (int) env('JOCKO_ALERT_BACKLOG_AGE_MINUTES', 30),
+
+        // `jocko:check-devices` (every 5 minutes) emails these about a device in trouble and
+        // again when it recovers. Blank means every active administrator. Mail goes through
+        // MAIL_MAILER: with the default `log` it is only written to the log.
+        'notify' => (bool) env('JOCKO_ALERT_NOTIFY', true),
+        'emails' => env('JOCKO_ALERT_EMAILS', ''),
+        'renotify_hours' => (int) env('JOCKO_ALERT_RENOTIFY_HOURS', 24),
     ],
 
     /*

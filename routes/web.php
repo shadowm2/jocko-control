@@ -6,6 +6,7 @@ use App\Http\Controllers\ShopFileController;
 use App\Livewire\Audit;
 use App\Livewire\Dashboard;
 use App\Livewire\Events;
+use App\Livewire\Payments;
 use App\Livewire\Shops;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,7 @@ Route::middleware(['auth', 'admin'])->group(function (): void {
 
     Route::get('shops/{shop}/files/{media}', [ShopFileController::class, 'show'])->whereNumber('media')->name('shops.files.show');
 
+    Route::livewire('payments', Payments\Index::class)->name('payments.index');
     Route::livewire('events', Events\Index::class)->name('events.index');
     Route::livewire('audit', Audit\Index::class)->name('audit.index');
 });
