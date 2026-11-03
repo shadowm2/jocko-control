@@ -34,6 +34,20 @@
         </dl>
     @endif
 
+    @if ($pictures !== [])
+        <flux:card data-pictures>
+            <flux:heading size="lg" class="mb-4">{{ __('ui.shop_data.pictures') }}</flux:heading>
+            <div class="flex flex-wrap gap-4">
+                @foreach ($pictures as $mediaId)
+                    <a href="{{ route('shops.files.show', [$shop, $mediaId]) }}" target="_blank" rel="noopener">
+                        <img src="{{ route('shops.files.show', [$shop, $mediaId]) }}" alt="" loading="lazy" class="max-h-48 max-w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700">
+                    </a>
+                @endforeach
+            </div>
+            <flux:text size="sm" class="mt-3 text-zinc-500">{{ __('ui.shop_data.pictures_hint') }}</flux:text>
+        </flux:card>
+    @endif
+
     <flux:card>
         <flux:heading size="lg" class="mb-4">{{ __('ui.shop_data.details') }}</flux:heading>
         <dl class="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">

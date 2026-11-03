@@ -21,7 +21,7 @@ class DeviceManagementService
     /**
      * Keys of the heartbeat's local_status object that are kept as diagnostics.
      */
-    public const LOCAL_STATUS_KEYS = ['state', 'pending_events', 'database_ok', 'disk_free_mb', 'uptime_seconds'];
+    public const LOCAL_STATUS_KEYS = ['state', 'pending_events', 'oldest_pending_seconds', 'database_ok', 'disk_free_mb', 'uptime_seconds'];
 
     public function __construct(private readonly AuditLogger $audit) {}
 

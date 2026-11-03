@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('jocko:expire-commands')->everyMinute()->withoutOverlapping();
+Schedule::command('jocko:prune')->dailyAt('03:30')->withoutOverlapping();

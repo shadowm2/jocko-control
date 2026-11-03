@@ -7,9 +7,11 @@ use App\Livewire\Concerns\RefreshesLive;
 use App\Models\Shop;
 use App\Models\ShopRecord;
 use App\Services\ShopDataCatalog;
+use App\Services\ShopFileGallery;
 use App\Services\ShopRecordReferences;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\Paginator;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -59,7 +61,7 @@ class Records extends Component
         $this->resetPage();
     }
 
-    public function render(ShopDataCatalog $catalog, ShopRecordReferences $references): View
+    public function render(ShopDataCatalog $catalog, ShopRecordReferences $references, ShopFileGallery $gallery): View
     {
         $search = trim($this->search);
 
@@ -83,6 +85,26 @@ class Records extends Component
             'columns' => $catalog->columns($this->entity),
             'records' => $records,
             'references' => $references->resolve($this->shopId, $this->entity, $records),
+            'thumbnails' => $this->thumbnails($gallery, $records),
         ])->layout('components.layouts.app', ['title' => __('ui.shop_data.entities.'.$this->entity)]);
+    }
+
+    /**
+     * The first picture of each listed record, as record local id => media id.
+     *
+     * @param  Paginator<int, ShopRecord>  $records
+     * @return array<int, int>
+     */
+    private function thumbnails(ShopFileGallery $gallery, Paginator $records): array
+    {
+        $ids = array_values($records->getCollection()->map(fn (ShopRecord $record): int => $record->local_id)->all());
+
+        if ($this->entity === 'media') {
+            $available = $gallery->available($this->shopId, $ids);
+
+            return array_combine($available, $available) ?: [];
+        }
+
+        return array_map(fn (array $pictures): int => $pictures[0], $gallery->forRecords($this->shopId, $this->entity, $ids));
     }
 }

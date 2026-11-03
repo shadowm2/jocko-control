@@ -99,6 +99,7 @@ Tells the server the device is alive and reports diagnostics. The server records
 | `database_schema_version` | string, optional | Longer than 50 characters is cut to 50, not rejected. |
 | `local_status.state` | `idle`, `syncing`, `error`, `maintenance`, optional | |
 | `local_status.pending_events` | integer ≥ 0, optional | Events waiting to be pushed. |
+| `local_status.oldest_pending_seconds` | integer ≥ 0, optional | Age of the oldest event still waiting to be pushed (0 when none). With `pending_events` it feeds the dashboard's "needs attention" list. |
 | `local_status.database_ok` | boolean, optional | |
 | `local_status.disk_free_mb` | integer ≥ 0, optional | |
 | `local_status.uptime_seconds` | integer ≥ 0, optional | |
@@ -200,6 +201,32 @@ Rejection codes (per event): `validation_failed` (with `details` per field), `pa
 Whole-request failures: `422` when `events` is missing, empty, not an array, or has more than 100 items; `413` for bodies over 8 MB; `500` if storing failed (**nothing** from the batch was kept; resend it).
 
 A batch in which nothing was rejected marks the device as successfully synchronized (`last_sync_at` is set, `last_sync_error` cleared). A batch with rejections records a sync error for administrators instead.
+
+## `POST /sync/files`
+
+Uploads the **preview image** of one of the shop's pictures. Send it *before* the picture's `media.*` event (see [Pictures](#pictures)), so the picture is never listed without its file. Repeating an upload is harmless.
+
+`multipart/form-data` (not JSON):
+
+| Field | Type | Rules |
+| --- | --- | --- |
+| `media_id` | integer ≥ 1 | The shop's own id of the picture (the `id` in its `media` event). |
+| `sha256` | string | Lowercase hex SHA-256 of the file. A file that does not match is refused, so a truncated upload is never stored. |
+| `file` | file | JPEG, PNG or WebP, at most 2 MB (`jocko.files.max_kilobytes`). The content is checked, not the name; SVG is refused. |
+
+```bash
+curl -s -X POST "$CONTROL/api/v1/sync/files" \
+  -H "Authorization: Bearer $TOKEN" -H 'Accept: application/json' \
+  -F media_id=12 -F sha256="$(sha256sum preview.jpg | cut -d' ' -f1)" -F file=@preview.jpg
+```
+
+```json
+{ "data": { "media_id": 12, "sha256": "e12a8162…", "status": "stored" } }
+```
+
+`201` with `status` `stored` when the file is new or replaced the previous one for that `media_id`, `200` with `already_stored` when the same bytes were already there. `422 validation_failed` for a bad checksum, a wrong type or a file that is too large. The shop is always the authenticated device's, so one shop can neither read nor replace another's files. Uploads have their own rate limit (600 per minute per device by default, `JOCKO_API_RATE_LIMIT_FILES_PER_DEVICE`).
+
+The files are kept on a private disk and shown only to signed-in administrators.
 
 ## `GET /device/commands`
 
@@ -306,3 +333,13 @@ Only the fields listed for the entity in `config/shop_data.php` are kept; the re
 }
 ```
 
+### Pictures
+
+A picture is the entity `media`. Its payload names the record it belongs to by entity type, never by a class name:
+
+```json
+{ "id": 12, "owner_type": "item", "owner_id": 4, "collection": "images", "mime_type": "image/jpeg", "order": 0, "original_name": "pads.jpg",
+  "created_at": "…", "updated_at": "…", "deleted_at": null }
+```
+
+The file itself is not in the event: jocko-shop sends a downsized copy (longest side 800 px) with `POST /sync/files` first. When the picture is deleted, a `media.deleted` event removes the preview here too. The originals never leave the shop.

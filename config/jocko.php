@@ -37,6 +37,53 @@ return [
     'sync_failure_window_hours' => (int) env('JOCKO_SYNC_FAILURE_WINDOW_HOURS', 24),
 
     /*
+    |--------------------------------------------------------------------------
+    | Monitoring
+    |--------------------------------------------------------------------------
+    |
+    | When a device is listed under "needs attention" on the dashboard: it has
+    | not been heard from for this many minutes, or it reports at least this
+    | many unsent events, or its oldest unsent event is older than this many
+    | minutes (the shop reports both in its heartbeat).
+    |
+    */
+
+    'alerts' => [
+        'offline_minutes' => (int) env('JOCKO_ALERT_OFFLINE_MINUTES', 60),
+        'backlog_events' => (int) env('JOCKO_ALERT_BACKLOG_EVENTS', 500),
+        'backlog_age_minutes' => (int) env('JOCKO_ALERT_BACKLOG_AGE_MINUTES', 30),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Retention
+    |--------------------------------------------------------------------------
+    |
+    | `php artisan jocko:prune` (scheduled daily) deletes synchronization events
+    | and audit entries older than this many days; 0 keeps them forever. The
+    | shop mirror (`shop_records`) is not touched, but once old events are gone
+    | `jocko:project-events` can no longer rebuild records they alone described:
+    | have the shop run `control:resync` to send a fresh full copy instead.
+    |
+    */
+
+    'retention' => [
+        'events_days' => (int) env('JOCKO_RETENTION_EVENTS_DAYS', 180),
+        'audit_days' => (int) env('JOCKO_RETENTION_AUDIT_DAYS', 365),
+    ],
+
+    /*
+    | Languages an administrator can pick from (code => name shown in the
+    | switcher). Each needs a folder in lang/. Persian is right-to-left and
+    | gets the Jalali calendar and Persian digits.
+    */
+
+    'locales' => [
+        'fa' => 'فارسی',
+        'en' => 'English',
+    ],
+
+    /*
     | Timezone used when showing timestamps to administrators. Storage is UTC.
     */
 
@@ -66,6 +113,14 @@ return [
     ],
 
     /*
+    | Preview images a shop sends for its pictures (never the originals).
+    */
+
+    'files' => [
+        'max_kilobytes' => 2048,
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Remote commands
     |--------------------------------------------------------------------------
@@ -91,6 +146,8 @@ return [
         'rate_limit_per_ip' => (int) env('JOCKO_API_RATE_LIMIT_PER_IP', 600),
         // Requests per minute per authenticated device.
         'rate_limit_per_device' => (int) env('JOCKO_API_RATE_LIMIT_PER_DEVICE', 120),
+        // Preview-image uploads per minute per device (one request per image).
+        'rate_limit_files_per_device' => (int) env('JOCKO_API_RATE_LIMIT_FILES_PER_DEVICE', 600),
 
         // Suggested intervals returned from GET /device/me.
         'heartbeat_interval_seconds' => 15,

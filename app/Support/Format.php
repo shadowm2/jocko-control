@@ -73,6 +73,23 @@ final class Format
         return $value->copy()->locale(app()->getLocale())->diffForHumans();
     }
 
+    /**
+     * A length of time as the largest whole unit: "5 min", "3 h", "2 d".
+     */
+    public static function duration(int|float $seconds): string
+    {
+        $seconds = max(0, (int) $seconds);
+
+        [$count, $unit] = match (true) {
+            $seconds >= 86400 => [intdiv($seconds, 86400), 'day'],
+            $seconds >= 3600 => [intdiv($seconds, 3600), 'hour'],
+            $seconds >= 60 => [intdiv($seconds, 60), 'minute'],
+            default => [$seconds, 'second'],
+        };
+
+        return __('ui.duration.'.$unit, ['count' => self::number($count)]);
+    }
+
     public static function number(int|float $value): string
     {
         if (app()->getLocale() !== 'fa' || ! class_exists(NumberFormatter::class)) {

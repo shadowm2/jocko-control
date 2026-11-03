@@ -23,6 +23,7 @@ class ShopRecordProjector implements SyncEventHandler
     public function __construct(
         private readonly ShopDataCatalog $catalog,
         private readonly ShopChangeBroadcaster $broadcaster,
+        private readonly ShopFileStore $files,
     ) {}
 
     public function supports(SyncEvent $event): bool
@@ -59,6 +60,11 @@ class ShopRecordProjector implements SyncEventHandler
         } catch (UniqueConstraintViolationException) {
             // Lost the race to create the row: it exists now, so update it.
             $this->apply($key, $attributes);
+        }
+
+        // A picture the shop deleted must not linger here as a preview.
+        if ($entity === 'media' && $attributes['removed_at'] !== null) {
+            $this->files->forget($event->shop_id, $localId);
         }
 
         $this->broadcaster->changed($event->shop_id, ShopChanged::DATA);

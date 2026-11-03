@@ -17,6 +17,21 @@ This MVP covers the central infrastructure only:
 
 > **Ingestion boundary.** Receiving a synchronization event first only *records* it in the `sync_events` inbox. The one thing applied from there is the **read-only shop mirror** (`shop_records`, see [Shop data](#shop-data-read-only-mirror)). Control never writes back to a shop's data, and there is still no central repair-order, customer or inventory *business* schema with conflict rules. Further consumers hook in through `App\Contracts\SyncEventHandler` (see [Extending](#extending-event-processing)).
 
+```
+ shop (jocko-shop, one per workshop)                      Jocko Control (this app)
+ ┌───────────────────────────────┐   heartbeat, poll      ┌─────────────────────────┐
+ │ models ─▶ control_outbox_events│ ──────────────────────▶│ /api/v1 device API      │
+ │            (same transaction)  │   push events (HTTPS)  │ sync_events ─▶ shop_records
+ └───────────────────────────────┘ ◀── remote commands ───│ Livewire admin + Reverb │
+                                                           └─────────────────────────┘
+```
+
+The shop side lives in the `Control` module of [`jocko-shop`](../jocko-shop) (`control:*` Artisan commands).
+
+![Dashboard](docs/screenshots/dashboard-en.png)
+
+More: [Persian dashboard](docs/screenshots/dashboard-fa.png), [a shop's dashboard](docs/screenshots/shop-dashboard-fa.png), [order filters with the Jalali date picker](docs/screenshots/orders-datepicker-fa.png).
+
 Stack: Laravel 13, PHP 8.5 (8.3+ supported), MySQL 8, Livewire 4, Flux UI (free), Tailwind CSS 4, Laravel Sanctum, Laravel Reverb (live pages), PHPUnit.
 
 ## Setup
@@ -56,6 +71,22 @@ php artisan serve
 ```
 
 Open <http://localhost:8000> and sign in.
+
+### Running Control and a shop together
+
+The shop ([`jocko-shop`](../jocko-shop)) is a separate app; to see the two talk to each other on one machine:
+
+1. **Control**: finish the setup above, then `composer dev` (serves on <http://localhost:8000>, together with Reverb, the queue and the scheduler).
+2. **Register the shop**: sign in, *Shops → New shop*, then on the shop's page *Register device*. The token is shown **once**; copy it.
+3. **Shop**: in the shop's `.env` set
+
+   ```dotenv
+   JOCKO_CONTROL_URL=http://localhost:8000
+   JOCKO_CONTROL_TOKEN=<the token>
+   ```
+
+   and start it with `composer dev` (it takes port 8001 when Control has 8000). The URL must be `https://` in production.
+4. **Check**: in the shop run `php artisan control:status`. Within about 15 seconds the device shows as *online* here, and changes made in the shop appear under the shop's *Orders* and *All data* tabs within seconds. Nothing arriving? See the `control:*` commands in the shop's README and check that its scheduler is running.
 
 ### Creating administrators
 
@@ -112,11 +143,15 @@ Everything specific to this application is in [`config/jocko.php`](config/jocko.
 | `JOCKO_REQUIRE_HTTPS` | on in production | Refuse plain-HTTP API calls and redirect the admin UI to HTTPS. |
 | `JOCKO_API_RATE_LIMIT_PER_IP` / `_PER_DEVICE` | `600` / `120` | Requests per minute. |
 | `TRUSTED_PROXIES` | empty | Comma-separated proxy IPs (or `*`) when TLS terminates at a load balancer. |
+| `JOCKO_ALERT_OFFLINE_MINUTES` | `60` | A device silent for this long is listed under *Needs attention* on the dashboard. |
+| `JOCKO_ALERT_BACKLOG_EVENTS` / `_BACKLOG_AGE_MINUTES` | `500` / `30` | A device that reports at least this many unsent events, or an unsent event older than this, is listed too. |
+| `JOCKO_API_RATE_LIMIT_FILES_PER_DEVICE` | `600` | Preview-image uploads per minute per device (one request each). |
+| `JOCKO_RETENTION_EVENTS_DAYS` / `_AUDIT_DAYS` | `180` / `365` | `jocko:prune` deletes sync events and audit entries older than this (`0` keeps them forever). |
 | `SANCTUM_TOKEN_PREFIX` | `jkd_` | Prefix of device tokens (helps secret scanners find leaked ones). |
 
 Fixed limits (also in `config/jocko.php`): 100 events per batch, 64 KB per event payload, 8 MB per request, 50 commands per poll.
 
-The UI is Persian-first (`APP_LOCALE=fa`, RTL, Jalali dates, Persian digits). Strings live in `lang/fa/`. Database values and API field names are language independent.
+The UI is Persian-first (`APP_LOCALE=fa`, RTL, Jalali dates and date picker, Persian digits) and also available in English. Administrators switch with the language links under the menu (and on the sign-in page); the choice is kept in a cookie. Strings live in `lang/fa/ui.php` and `lang/en/ui.php` (a test fails if one has a key the other lacks); add a language by adding a folder and listing it in `config('jocko.locales')`. Database values and API field names are language independent.
 
 ## How it works
 
@@ -132,6 +167,14 @@ The UI is Persian-first (`APP_LOCALE=fa`, RTL, Jalali dates, Persian digits). St
 - **Revoke** deletes all of the device's tokens and marks it `revoked`. **Issue a new token** (rotate) invalidates the old token and shows a new one once.
 - The token is a **secret**. Configure it on the device through its environment/secret store. Never commit it to source control.
 - Administrators authenticate with the session guard, devices with bearer tokens; a session cookie is useless on `/api/v1` and a device token is useless on the admin UI.
+
+### Monitoring
+
+The dashboard's **Needs attention** card lists devices of active shops that have been silent longer than `JOCKO_ALERT_OFFLINE_MINUTES`, or that cannot get their changes through: the shop reports `pending_events` and `oldest_pending_seconds` in every heartbeat (see [docs/api.md](docs/api.md)). A silent device's old report is not judged, only its silence. The thresholds are in `config/jocko.php`.
+
+### Retention
+
+`sync_events` and `audit_logs` grow without bound, so `php artisan jocko:prune` (scheduled daily at 03:30; `--dry-run` only counts) deletes the ones older than the retention period above. The shop mirror (`shop_records`) is not touched. After pruning, `jocko:project-events` can no longer rebuild records that only the deleted events described; have the shop run `control:resync` to send a fresh full copy instead.
 
 ### Connectivity states
 
@@ -184,7 +227,16 @@ Besides the record's fields, the projector keeps three indexed columns so the da
 
 `php artisan jocko:project-events [--shop=UUID]` rebuilds the mirror by replaying the stored inbox (after a bug fix, or to catch up events received before the projector existed). **Run it once after upgrading to the version that added these columns**: rows projected earlier have them empty until replayed, and their totals read as zero. The mirror is a view of the inbox, so `sync_events` stays the system of record.
 
-Not mirrored, on purpose: settings and API keys, roles and permissions, uploaded media files, and everything credential-like.
+#### Pictures
+
+Item, brand and car photos are mirrored as a **small preview** (longest side 800 px, a few dozen KB) that the shop uploads with `POST /api/v1/sync/files` just before the picture's event; the original file never leaves the shop. A record's page shows its pictures, and lists show the first one as a thumbnail (*All data → Images* lists them all).
+
+- The previews sit on the **private** disk (`storage/app/private/shop-files/<shop>/<hash>`) and are only served by `shops/{shop}/files/{id}`, to signed-in administrators, with `nosniff` and a locked-down CSP. Uploads are checked by content (JPEG/PNG/WebP, 2 MB, SHA-256 must match); SVG is refused.
+- Deleting a picture in the shop removes its preview here. Back up `storage/app/private/shop-files` with the database if you want to keep them; they can always be re-sent with `control:resync media` on the shop.
+- Run `php artisan migrate` after updating (it adds the `shop_files` table). Until then every upload fails with a server error; the shop retries, then lists the picture without a preview.
+- Storage grows by about 90 KB per picture; plan for it when many shops send many photos.
+
+Not mirrored, on purpose: settings and API keys, roles and permissions, the original media files, and everything credential-like.
 
 ### Extending event processing
 
@@ -202,7 +254,13 @@ The suite runs against **MySQL** (no SQLite assumptions). `phpunit.xml` forces t
 php artisan test --compact                       # everything
 php artisan test --compact tests/Feature/Api     # device API only
 vendor/bin/pint --dirty --format agent           # code style
+composer types:check                             # PHPStan (level 8, Larastan)
+composer ci:check                                # style check, PHPStan and the suite, as CI runs them
 ```
+
+PHPStan runs against `phpstan-baseline.neon`, which records the findings that existed when it was introduced (mostly Eloquent casts and Livewire computed properties it cannot see yet); new code must be clean. Shrink the baseline as you touch those files: `vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon`.
+
+CI (`.github/workflows/tests.yml`) runs `composer ci:check` against a MySQL service container on every push to `main` and every pull request.
 
 Frontend: `npm run build`. Feature tests disable Vite, so they do not need a build.
 
@@ -213,8 +271,8 @@ Frontend: `npm run build`. Feature tests disable Vite, so they do not need a bui
 - `composer install --no-dev --optimize-autoloader`, `npm ci && npm run build`, `php artisan migrate --force`, `php artisan config:cache route:cache view:cache`.
 - Run the scheduler (cron above).
 - Run the Reverb socket server (`php artisan reverb:start`) under a process manager and proxy it over TLS; without it the shop pages fall back to polling every minute.
-- Back up the database, in particular `sync_events` (the system of record for what shops have sent; `shop_records` can be rebuilt from it) and `audit_logs`.
-- Plan retention for `sync_events` and `audit_logs`; both grow without bound.
+- Back up `storage/app/private/shop-files` (shop picture previews) together with the database, in particular `sync_events` (the system of record for what shops have sent; `shop_records` can be rebuilt from it) and `audit_logs`.
+- Check the retention periods (`JOCKO_RETENTION_*`); `jocko:prune` runs from the scheduler.
 - Create administrators with `jocko:create-admin`; never seed a default one.
 
 ## Known limitations
@@ -222,9 +280,12 @@ Frontend: `npm run build`. Feature tests disable Vite, so they do not need a bui
 - Only the read-only shop mirror is projected from events; there is no central business data with conflict resolution yet, and shops cannot be edited from here.
 - The generic *All data* lists search the record's label (e.g. order number, name) and id only.
 - Dashboard and order totals are only as fresh as the shop's last synchronization; the dashboard shows when data last arrived.
-- Order date filters use the browser's date picker (Gregorian), not a Jalali one.
 - The low-stock rule and the order-value rule are re-implemented from jocko-shop's own; if the shop changes them, change `ShopDashboardMetrics` too.
-- The admin UI has Persian strings only; no language switcher.
+- The admin UI is in Persian and English only; shop data labels that the shop sends (item names and so on) are shown as sent.
 - No password reset, MFA or role separation: every active user is a full administrator.
 - Rate limiting uses the configured cache store; for several app servers use a shared one (database, Redis, Memcached).
 - Device-originated timestamps (`occurred_at`) are stored as supplied (within 2000–2100) and never used for connectivity.
+
+## License
+
+Proprietary, all rights reserved. See [LICENSE](LICENSE).

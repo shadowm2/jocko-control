@@ -7,6 +7,7 @@ use App\Livewire\Concerns\RefreshesLive;
 use App\Models\Shop;
 use App\Models\ShopRecord;
 use App\Services\ShopDataCatalog;
+use App\Services\ShopFileGallery;
 use App\Services\ShopRecordReferences;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
@@ -40,7 +41,7 @@ class Show extends Component
         $this->recordId = $record->getKey();
     }
 
-    public function render(ShopDataCatalog $catalog, ShopRecordReferences $references): View
+    public function render(ShopDataCatalog $catalog, ShopRecordReferences $references, ShopFileGallery $gallery): View
     {
         $record = ShopRecord::query()->forShop($this->shopId)->findOrFail($this->recordId);
 
@@ -77,6 +78,9 @@ class Show extends Component
             'fields' => array_keys($catalog->fields($this->entity)),
             'references' => $references->resolve($this->shopId, $this->entity, [$record]),
             'children' => $children,
+            'pictures' => $this->entity === 'media'
+                ? ($gallery->has($this->shopId, $record->local_id) ? [$record->local_id] : [])
+                : ($gallery->forRecords($this->shopId, $this->entity, [$record->local_id])[$record->local_id] ?? []),
             'summary' => $this->entity === 'order' ? $this->orderSummary($record) : null,
         ])->layout('components.layouts.app', ['title' => $record->label]);
     }

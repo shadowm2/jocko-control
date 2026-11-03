@@ -11,6 +11,7 @@ return [
         'audit' => 'گزارش ممیزی',
         'logout' => 'خروج',
         'menu' => 'منو',
+        'language' => 'زبان',
     ],
 
     'common' => [
@@ -46,6 +47,11 @@ return [
         'reset' => 'پاک کردن فیلترها',
     ],
 
+    'datepicker' => [
+        'today' => 'امروز',
+        'clear' => 'پاک کردن',
+    ],
+
     'auth' => [
         'title' => 'ورود مدیران',
         'subtitle' => 'برای ادامه وارد حساب مدیریتی خود شوید.',
@@ -76,6 +82,19 @@ return [
         'recent_errors' => 'خطاهای اخیر همگام‌سازی',
         'no_activity' => 'هنوز فعالیتی ثبت نشده است.',
         'no_errors' => 'هیچ دستگاهی خطای همگام‌سازی ندارد.',
+        'needs_attention' => 'نیازمند توجه',
+        'all_healthy' => 'همهٔ دستگاه‌ها سالم‌اند.',
+        'silent_for' => ':time بی‌خبر',
+        'backlog' => ':count رویداد ارسال‌نشده، قدیمی‌ترین :age',
+        'backlog_count' => ':count رویداد ارسال‌نشده',
+        'attention_hint' => 'دستگاهی که بیش از :offline ساکت بماند، یا دست‌کم :events رویداد ارسال‌نشده یا رویدادی قدیمی‌تر از :age داشته باشد، اینجا فهرست می‌شود.',
+    ],
+
+    'duration' => [
+        'second' => ':count ثانیه',
+        'minute' => ':count دقیقه',
+        'hour' => ':count ساعت',
+        'day' => ':count روز',
     ],
 
     'shops' => [
@@ -300,6 +319,8 @@ return [
         'removed_banner' => 'این رکورد در فروشگاه حذف شده است.',
         'synced_at' => 'آخرین تغییر در فروشگاه',
         'children_truncated' => 'فقط :shown مورد از :total نمایش داده شد.',
+        'pictures' => 'تصاویر',
+        'pictures_hint' => 'نسخهٔ کوچک‌شدهٔ تصویر؛ فایل اصلی فقط در خود فروشگاه می‌ماند.',
         'open' => 'مشاهدهٔ داده‌ها',
         'scope' => [
             'alive' => 'رکوردهای فعال',
@@ -342,6 +363,7 @@ return [
             'purchase_item' => 'اقلام خرید',
             'country' => 'کشورها',
             'province' => 'استان‌ها',
+            'media' => 'تصویر‌ها',
             'city' => 'شهرها',
         ],
         'fields' => [
@@ -423,6 +445,12 @@ return [
             'code3' => 'کد ۳حرفی',
             'phone_code' => 'پیش‌شمارهٔ تلفن',
             'country_id' => 'کشور',
+            'owner_type' => 'نوع مالک',
+            'owner_id' => 'شناسهٔ مالک',
+            'collection' => 'گروه تصویر',
+            'mime_type' => 'نوع فایل',
+            'order' => 'ترتیب',
+            'original_name' => 'نام فایل',
             'province_id' => 'استان',
         ],
         'values' => [

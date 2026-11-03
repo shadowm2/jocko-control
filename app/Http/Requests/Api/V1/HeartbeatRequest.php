@@ -38,6 +38,7 @@ class HeartbeatRequest extends FormRequest
             'local_status' => ['nullable', 'array'],
             'local_status.state' => ['nullable', 'string', 'in:idle,syncing,error,maintenance'],
             'local_status.pending_events' => ['nullable', 'integer', 'min:0', 'max:1000000000'],
+            'local_status.oldest_pending_seconds' => ['nullable', 'integer', 'min:0', 'max:1000000000'],
             'local_status.database_ok' => ['nullable', 'boolean'],
             'local_status.disk_free_mb' => ['nullable', 'integer', 'min:0', 'max:1000000000'],
             'local_status.uptime_seconds' => ['nullable', 'integer', 'min:0', 'max:1000000000'],

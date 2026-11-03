@@ -55,7 +55,13 @@ class DemoSeeder extends Seeder
 
         $front->device->forceFill(['last_seen_at' => now()->subMinutes(2), 'last_sync_at' => now()->subMinutes(2), 'app_version' => '1.4.2'])->save();
         $workshop->device->forceFill(['last_seen_at' => now()->subHours(3), 'last_sync_error' => 'Local database is locked', 'last_sync_error_at' => now()->subHours(3), 'app_version' => '1.4.0'])->save();
-        $betaDesk->device->forceFill(['last_seen_at' => now()->subMinutes(40), 'last_sync_at' => now()->subMinutes(41), 'app_version' => '1.4.2'])->save();
+        $betaDesk->device->forceFill([
+            'last_seen_at' => now()->subMinutes(1),
+            'last_sync_at' => now()->subMinutes(41),
+            'app_version' => '1.4.2',
+            // Cannot get through: shows up under "needs attention" on the dashboard.
+            'metadata' => ['local_status' => ['state' => 'idle', 'pending_events' => 750, 'oldest_pending_seconds' => 2400, 'database_ok' => true], 'local_status_at' => now()->toIso8601String()],
+        ])->save();
         $old->device->forceFill(['last_seen_at' => now()->subDay()])->save();
 
         SyncEvent::factory()->count(12)->create(['device_id' => $front->device->id]);

@@ -4,6 +4,7 @@ use App\Http\Middleware\AuthorizeDevice;
 use App\Http\Middleware\EnforceHttps;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\LimitRequestSize;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         }
 
         $middleware->prepend(EnforceHttps::class);
+        $middleware->web(append: [SetLocale::class]);
 
         $middleware->alias([
             'admin' => EnsureAdmin::class,

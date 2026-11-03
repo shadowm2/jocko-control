@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\RemoteCommandController;
 use App\Http\Controllers\Api\V1\SyncEventController;
 use Illuminate\Support\Facades\Route;
@@ -27,4 +28,11 @@ Route::prefix('v1')
         Route::post('device/commands/{command}/ack', [RemoteCommandController::class, 'acknowledge'])
             ->whereUuid('command')
             ->name('api.v1.device.commands.ack');
+    });
+
+// Preview images are uploaded one request each, so they get their own, higher limit.
+Route::prefix('v1')
+    ->middleware(['request.limit', 'throttle:device-ip', 'auth:sanctum', 'device', 'throttle:device-files'])
+    ->group(function (): void {
+        Route::post('sync/files', [FileController::class, 'store'])->name('api.v1.sync.files');
     });
