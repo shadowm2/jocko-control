@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Lang;
 use IntlDateFormatter;
 use NumberFormatter;
 
@@ -88,6 +89,25 @@ final class Format
         };
 
         return __('ui.duration.'.$unit, ['count' => self::number($count)]);
+    }
+
+    /**
+     * A sync event type such as "order.created" in words ("ایجاد سفارش"), or null
+     * when it is not of the form entity.action. A name this app has no word for is
+     * shown as it is, so a new kind of event is never hidden.
+     */
+    public static function eventType(string $type): ?string
+    {
+        [$entity, $action] = array_pad(explode('.', $type, 2), 2, '');
+
+        if ($entity === '' || $action === '' || str_contains($action, '.')) {
+            return null;
+        }
+
+        return __('ui.event_format', [
+            'entity' => Lang::has("ui.event_entities.{$entity}") ? __("ui.event_entities.{$entity}") : $entity,
+            'action' => Lang::has("ui.event_actions.{$action}") ? __("ui.event_actions.{$action}") : $action,
+        ]);
     }
 
     public static function number(int|float $value): string

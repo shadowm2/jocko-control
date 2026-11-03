@@ -204,6 +204,8 @@ A batch is stored in one database transaction: if something unexpected goes wron
 
 Only these types exist: `sync_now`, `check_version`, `collect_diagnostics`, `refresh_config`. They carry validated, whitelisted parameters. There is no shell, SQL or code execution. Sensitive commands (`collect_diagnostics`, `refresh_config`) need an explicit confirmation in the UI.
 
+`sync_now` sends what is waiting in the shop's outbox right away. With **Full sync** ticked (`full: true`) the shop first queues a fresh copy of every record, as `control:resync` does, so it is the way to refill a mirror that was lost or deleted from the admin UI. The command's result says how many records were queued and sent; a large shop finishes over the next scheduled pushes.
+
 A command is delivered to its own device while `queued` and unexpired (at-least-once, so devices must tolerate seeing it again until they acknowledge it). Acknowledging is idempotent: repeating the same status is a no-op, contradicting a final status is `409`, and an expired command can never become completed.
 
 ### Shop data (read-only mirror)

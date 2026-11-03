@@ -49,7 +49,7 @@
                                 <a class="hover:underline" href="{{ route('shops.show', $event->shop_id) }}" wire:navigate>{{ $event->shop?->name }}</a>
                             </flux:table.cell>
                             <flux:table.cell>{{ $event->device?->name }}</flux:table.cell>
-                            <flux:table.cell variant="strong"><span dir="ltr">{{ $event->event_type }}</span></flux:table.cell>
+                            <flux:table.cell variant="strong"><x-event-type :type="$event->event_type" /></flux:table.cell>
                             <flux:table.cell>
                                 <span dir="ltr" class="text-xs">{{ $event->aggregate_type }}<br><span class="font-mono text-zinc-500">{{ \Illuminate\Support\Str::limit($event->aggregate_id, 13, '…') }}</span></span>
                             </flux:table.cell>
@@ -69,7 +69,7 @@
         @if ($viewing)
             @php $json = Format::json($viewing->payload); @endphp
             <div class="space-y-4">
-                <flux:heading size="lg"><span dir="ltr">{{ $viewing->event_type }}</span></flux:heading>
+                <flux:heading size="lg"><x-event-type :type="$viewing->event_type" /></flux:heading>
                 <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                     <div class="sm:col-span-2">
                         <dt class="text-zinc-500">{{ __('ui.events.event_id') }}</dt>
