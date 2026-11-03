@@ -146,6 +146,9 @@ Everything specific to this application is in [`config/jocko.php`](config/jocko.
 | `JOCKO_ALERT_OFFLINE_MINUTES` | `60` | A device silent for this long is listed under *Needs attention* on the dashboard. |
 | `JOCKO_ALERT_BACKLOG_EVENTS` / `_BACKLOG_AGE_MINUTES` | `500` / `30` | A device that reports at least this many unsent events, or an unsent event older than this, is listed too. |
 | `JOCKO_API_RATE_LIMIT_FILES_PER_DEVICE` | `600` | Preview-image uploads per minute per device (one request each). |
+| `JOCKO_ALERT_NOTIFY` | `true` | `jocko:check-devices` emails the administrators about a device in trouble, and when it recovers. |
+| `JOCKO_ALERT_EMAILS` | empty | Comma-separated addresses to tell instead of every active administrator. |
+| `JOCKO_ALERT_RENOTIFY_HOURS` | `24` | A device that stays in trouble is mentioned again after this long. |
 | `JOCKO_RETENTION_EVENTS_DAYS` / `_AUDIT_DAYS` | `180` / `365` | `jocko:prune` deletes sync events and audit entries older than this (`0` keeps them forever). |
 | `SANCTUM_TOKEN_PREFIX` | `jkd_` | Prefix of device tokens (helps secret scanners find leaked ones). |
 
@@ -171,6 +174,12 @@ The UI is Persian-first (`APP_LOCALE=fa`, RTL, Jalali dates and date picker, Per
 ### Monitoring
 
 The dashboard's **Needs attention** card lists devices of active shops that have been silent longer than `JOCKO_ALERT_OFFLINE_MINUTES`, or that cannot get their changes through: the shop reports `pending_events` and `oldest_pending_seconds` in every heartbeat (see [docs/api.md](docs/api.md)). A silent device's old report is not judged, only its silence. The thresholds are in `config/jocko.php`.
+
+The same list is emailed: `jocko:check-devices` (scheduled every 5 minutes) mails every active administrator, or the addresses in `JOCKO_ALERT_EMAILS`, **once** when a device goes silent or backs up and once when it is fine again, and repeats a problem that lasts only after `JOCKO_ALERT_RENOTIFY_HOURS`. Mail goes through `MAIL_MAILER`; with the default `log` it is only written to the log, so set a real mailer to receive it. A red badge on the Dashboard menu item shows how many devices need attention.
+
+### Collections
+
+**Collections** (`/payments`) shows what the shops collected today, this month (Jalali) and in the last 30 days, in total, per payment method and per shop, from the payments they synchronize. A payment counts on the date written on it; refunds are negative payments and are subtracted. Amounts are in the shop's own unit.
 
 ### Retention
 
