@@ -10,11 +10,18 @@
         </flux:sidebar.header>
 
         <flux:sidebar.nav>
-            <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+            @php
+                // Devices that need attention, shown beside the dashboard that lists them.
+                $attentionCount = \Illuminate\Support\Facades\Cache::remember('jocko.attention.count', 30, fn (): int => count(app(\App\Services\DashboardMetrics::class)->attention(limit: PHP_INT_MAX)));
+            @endphp
+            <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" :badge="$attentionCount > 0 ? \App\Support\Format::number($attentionCount) : null" badge-color="red" wire:navigate>
                 {{ __('ui.nav.dashboard') }}
             </flux:sidebar.item>
             <flux:sidebar.item icon="building-storefront" :href="route('shops.index')" :current="request()->routeIs('shops.*')" wire:navigate>
                 {{ __('ui.nav.shops') }}
+            </flux:sidebar.item>
+            <flux:sidebar.item icon="banknotes" :href="route('payments.index')" :current="request()->routeIs('payments.*')" wire:navigate>
+                {{ __('ui.nav.payments') }}
             </flux:sidebar.item>
             <flux:sidebar.item icon="inbox-arrow-down" :href="route('events.index')" :current="request()->routeIs('events.*')" wire:navigate>
                 {{ __('ui.nav.events') }}

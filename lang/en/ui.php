@@ -9,6 +9,7 @@ return [
         'shops' => 'Shops',
         'events' => 'Sync events',
         'audit' => 'Audit log',
+        'payments' => 'Collections',
         'logout' => 'Sign out',
         'menu' => 'Menu',
         'language' => 'Language',
@@ -258,6 +259,22 @@ return [
         'deleted' => 'deleted',
         'restored' => 'restored',
         'snapshot' => 'full copy',
+    ],
+
+    'payments' => [
+        'title' => 'Collections',
+        'subtitle' => 'What the shops collected, by payment method',
+        'window' => ['today' => 'Today', 'month' => 'This month', 'days30' => 'Last 30 days'],
+        'month_by_method' => 'This month by method',
+        'none' => 'No payments.',
+        'hint' => 'Built from the payments the shops have synchronized, counted on the day written on each payment. Refunds are negative payments and are subtracted.',
+    ],
+
+    'alert_mail' => [
+        'subject_problem' => 'Needs attention: :device (:shop)',
+        'subject_recovered' => 'Fine again: :device (:shop)',
+        'recovered' => 'This device talks to the server and sends its events again.',
+        'open' => 'Open the shop',
     ],
 
     'live' => [
