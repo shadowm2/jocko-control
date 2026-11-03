@@ -316,6 +316,23 @@ return [
             ],
         ],
 
+        'media' => [
+            'group' => 'inventory',
+            'parent' => 'owner_id',
+            'label' => ['original_name'],
+            'columns' => ['owner_type', 'owner_id', 'collection', 'mime_type'],
+            // Pictures of other records. The shop sends a downscaled preview of the
+            // file separately (POST /api/v1/sync/files), keyed by this record's id.
+            'fields' => [
+                'owner_type' => 'string',
+                'owner_id' => 'int',
+                'collection' => 'string',
+                'mime_type' => 'string',
+                'order' => 'int',
+                'original_name' => 'string',
+            ],
+        ],
+
         'country' => [
             'group' => 'geography',
             'label' => ['name'],

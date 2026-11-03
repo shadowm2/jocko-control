@@ -57,5 +57,8 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('device-api', fn (Request $request) => Limit::perMinute((int) config('jocko.api.rate_limit_per_device'))
             ->by('device:'.($request->user()?->getKey() ?? $request->ip())));
+
+        RateLimiter::for('device-files', fn (Request $request) => Limit::perMinute((int) config('jocko.api.rate_limit_files_per_device'))
+            ->by('device-files:'.($request->user()?->getKey() ?? $request->ip())));
     }
 }

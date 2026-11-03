@@ -26,6 +26,8 @@
 
         <flux:spacer />
 
+        <x-locale-switcher class="px-1" />
+
         <div class="flex items-center justify-between gap-2 border-t border-zinc-200 pt-3 dark:border-zinc-700">
             <div class="min-w-0 text-sm">
                 <div class="truncate font-medium">{{ auth()->user()->name }}</div>

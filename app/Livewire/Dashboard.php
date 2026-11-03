@@ -15,6 +15,7 @@ class Dashboard extends Component
     {
         return view('livewire.dashboard', [
             'summary' => $metrics->summary(),
+            'attention' => $metrics->attention(),
             'activity' => $metrics->recentActivity(),
             'syncErrors' => $metrics->recentSyncErrors(),
         ])->layout('components.layouts.app', ['title' => __('ui.dashboard.title')]);

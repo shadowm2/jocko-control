@@ -76,7 +76,7 @@ class DeviceApiTest extends TestCase
         $this->postJson('/api/v1/device/heartbeat', [
             'app_version' => '1.4.2',
             'database_schema_version' => '2026_09_01_000001',
-            'local_status' => ['state' => 'idle', 'pending_events' => 3, 'database_ok' => true, 'unexpected' => 'dropped'],
+            'local_status' => ['state' => 'idle', 'pending_events' => 3, 'oldest_pending_seconds' => 42, 'database_ok' => true, 'unexpected' => 'dropped'],
         ], $this->bearer($issued))
             ->assertOk()
             ->assertJsonPath('data.received_at', now()->toIso8601String())
@@ -87,7 +87,7 @@ class DeviceApiTest extends TestCase
         $this->assertSame('1.4.2', $device->app_version);
         $this->assertSame('2026_09_01_000001', $device->database_schema_version);
         $this->assertTrue($device->last_seen_at->equalTo(now()));
-        $this->assertEquals(['state' => 'idle', 'pending_events' => 3, 'database_ok' => true], $device->metadata['local_status']);
+        $this->assertEquals(['state' => 'idle', 'pending_events' => 3, 'oldest_pending_seconds' => 42, 'database_ok' => true], $device->metadata['local_status']);
         $this->assertNull($device->last_sync_at, 'A heartbeat alone is not proof of synchronization.');
     }
 

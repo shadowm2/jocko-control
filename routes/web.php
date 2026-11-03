@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\ShopFileController;
 use App\Livewire\Audit;
 use App\Livewire\Dashboard;
 use App\Livewire\Events;
@@ -16,6 +18,8 @@ use Illuminate\Support\Facades\Route;
 | with `php artisan jocko:create-admin`.
 |
 */
+
+Route::post('locale/{locale}', [LocaleController::class, 'update'])->name('locale.update');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('login', [LoginController::class, 'create'])->name('login');
@@ -39,6 +43,8 @@ Route::middleware(['auth', 'admin'])->group(function (): void {
     Route::livewire('shops/{shop}/data', Shops\Data\Overview::class)->name('shops.data');
     Route::livewire('shops/{shop}/data/{entity}', Shops\Data\Records::class)->name('shops.data.entity');
     Route::livewire('shops/{shop}/data/{entity}/{record}', Shops\Data\Show::class)->name('shops.data.show');
+
+    Route::get('shops/{shop}/files/{media}', [ShopFileController::class, 'show'])->whereNumber('media')->name('shops.files.show');
 
     Route::livewire('events', Events\Index::class)->name('events.index');
     Route::livewire('audit', Audit\Index::class)->name('audit.index');

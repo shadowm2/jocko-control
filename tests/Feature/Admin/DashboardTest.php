@@ -117,4 +117,51 @@ class DashboardTest extends TestCase
 
         $this->assertLessThan(20, $queries);
     }
+
+    public function test_it_lists_devices_that_are_silent_or_have_a_backlog(): void
+    {
+        $shop = Shop::factory()->create();
+
+        $silent = ShopDevice::factory()->for($shop)->seenAt(now()->subMinutes(61))->create();
+        $recent = ShopDevice::factory()->for($shop)->seenAt(now()->subMinutes(59))->create();
+        $large = ShopDevice::factory()->for($shop)->seenAt(now()->subMinute())
+            ->state(['metadata' => ['local_status' => ['pending_events' => 500, 'oldest_pending_seconds' => 5]]])->create();
+        $old = ShopDevice::factory()->for($shop)->seenAt(now()->subMinute())
+            ->state(['metadata' => ['local_status' => ['pending_events' => 3, 'oldest_pending_seconds' => 1800]]])->create();
+        $small = ShopDevice::factory()->for($shop)->seenAt(now()->subMinute())
+            ->state(['metadata' => ['local_status' => ['pending_events' => 499, 'oldest_pending_seconds' => 1799]]])->create();
+        // Silent, with an old report of a backlog: only "silent" is reported.
+        $silentBacklog = ShopDevice::factory()->for($shop)->seenAt(now()->subHours(3))
+            ->state(['metadata' => ['local_status' => ['pending_events' => 9000]]])->create();
+        ShopDevice::factory()->for($shop)->create();                                  // never connected
+        ShopDevice::factory()->for($shop)->revoked()->seenAt(now()->subDays(2))->create();
+        ShopDevice::factory()->for(Shop::factory()->suspended())->seenAt(now()->subDays(2))->create();
+
+        $rows = collect(app(DashboardMetrics::class)->attention())->keyBy(fn (array $row): string => $row['device']->id);
+
+        $this->assertEqualsCanonicalizing(
+            [$silent->id, $large->id, $old->id, $silentBacklog->id],
+            $rows->keys()->all(),
+        );
+        $this->assertTrue($rows[$silent->id]['offline']);
+        $this->assertSame([false, 500, 5], [$rows[$large->id]['offline'], $rows[$large->id]['pending_events'], $rows[$large->id]['oldest_pending_seconds']]);
+        $this->assertSame(1800, $rows[$old->id]['oldest_pending_seconds']);
+        $this->assertNull($rows[$silentBacklog->id]['pending_events']);
+        $this->assertSame($silentBacklog->id, $rows->first()['device']->id, 'The longest silent device comes first.');
+        $this->assertNotContains($recent->id, $rows->keys()->all());
+        $this->assertNotContains($small->id, $rows->keys()->all());
+    }
+
+    public function test_the_dashboard_shows_the_attention_list(): void
+    {
+        $this->get(route('dashboard'))->assertOk()->assertSee(__('ui.dashboard.all_healthy'));
+
+        $device = ShopDevice::factory()->for(Shop::factory()->create(['name' => 'Silent Garage']))->seenAt(now()->subHours(2))->create();
+
+        $this->get(route('dashboard'))->assertOk()
+            ->assertSee('data-attention', false)
+            ->assertSee('Silent Garage')
+            ->assertSee($device->name)
+            ->assertDontSee(__('ui.dashboard.all_healthy'));
+    }
 }

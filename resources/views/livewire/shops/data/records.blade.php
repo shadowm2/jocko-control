@@ -41,6 +41,9 @@
                     @foreach ($records as $record)
                         <flux:table.row :key="$record->id">
                             <flux:table.cell variant="strong">
+                                @if (isset($thumbnails[$record->local_id]))
+                                    <img src="{{ route('shops.files.show', [$shop, $thumbnails[$record->local_id]]) }}" alt="" loading="lazy" class="me-3 inline-block size-10 rounded-md object-cover align-middle" data-thumbnail>
+                                @endif
                                 <a class="hover:underline" href="{{ route('shops.data.show', [$shop, $entity, $record]) }}" wire:navigate>{{ $record->label }}</a>
                                 @if ($record->removed_at)
                                     <flux:badge size="sm" color="red" class="ms-1">{{ __('ui.shop_data.removed') }}</flux:badge>

@@ -30,10 +30,10 @@
             </flux:select>
         </div>
         <div class="w-40">
-            <flux:input type="date" wire:model.live="createdFrom" :label="__('ui.shop_orders.created_from')" dir="ltr" />
+            <x-date-field wire:model.live="createdFrom" :label="__('ui.shop_orders.created_from')" />
         </div>
         <div class="w-40">
-            <flux:input type="date" wire:model.live="createdTo" :label="__('ui.shop_orders.created_to')" dir="ltr" />
+            <x-date-field wire:model.live="createdTo" :label="__('ui.shop_orders.created_to')" />
         </div>
         @if ($filtered)
             <flux:button variant="ghost" wire:click="resetFilters">{{ __('ui.common.reset') }}</flux:button>

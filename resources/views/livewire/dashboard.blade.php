@@ -36,7 +36,7 @@
                 </div>
                 <div class="min-w-0">
                     <div class="text-2xl font-semibold tabular-nums" data-value>{{ Format::number($summary[$tile['key']]) }}</div>
-                    <div class="truncate text-sm text-zinc-500">{{ __('ui.dashboard.'.$tile['key']) }}</div>
+                    <div class="text-sm leading-tight text-zinc-500">{{ __('ui.dashboard.'.$tile['key']) }}</div>
                 </div>
             </flux:card>
         @endforeach
@@ -45,6 +45,35 @@
     <flux:text size="sm" class="text-zinc-500">
         {{ __('ui.dashboard.online_hint', ['minutes' => Format::number((int) config('jocko.online_threshold_minutes'))]) }}
     </flux:text>
+
+    <flux:card data-attention>
+        <flux:heading size="lg" class="mb-4">{{ __('ui.dashboard.needs_attention') }}</flux:heading>
+
+        @forelse ($attention as $row)
+            <div wire:key="attention-{{ $row['device']->id }}" class="flex items-start justify-between gap-4 border-t border-zinc-100 py-3 first:border-t-0 dark:border-zinc-800">
+                <div class="min-w-0 text-sm font-medium">
+                    <a class="underline" href="{{ route('shops.show', $row['device']->shop) }}" wire:navigate>{{ $row['device']->shop->name }}</a>
+                    <span class="text-zinc-500">· {{ $row['device']->name }}</span>
+                </div>
+                <div class="flex shrink-0 flex-wrap justify-end gap-2">
+                    @if ($row['offline'])
+                        <flux:badge color="red" size="sm">{{ __('ui.dashboard.silent_for', ['time' => Format::duration(now()->diffInSeconds($row['device']->last_seen_at, true))]) }}</flux:badge>
+                    @endif
+                    @if ($row['pending_events'] !== null || $row['oldest_pending_seconds'] !== null)
+                        <flux:badge color="amber" size="sm">{{ $row['oldest_pending_seconds'] === null
+                                ? __('ui.dashboard.backlog_count', ['count' => Format::number($row['pending_events'])])
+                                : __('ui.dashboard.backlog', ['count' => Format::number($row['pending_events'] ?? 0), 'age' => Format::duration($row['oldest_pending_seconds'])]) }}</flux:badge>
+                    @endif
+                </div>
+            </div>
+        @empty
+            <flux:text class="py-6 text-center text-zinc-500">{{ __('ui.dashboard.all_healthy') }}</flux:text>
+        @endforelse
+
+        <flux:text size="sm" class="mt-4 text-zinc-500">
+            {{ __('ui.dashboard.attention_hint', ['offline' => Format::duration((int) config('jocko.alerts.offline_minutes') * 60), 'events' => Format::number((int) config('jocko.alerts.backlog_events')), 'age' => Format::duration((int) config('jocko.alerts.backlog_age_minutes') * 60)]) }}
+        </flux:text>
+    </flux:card>
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <flux:card>
