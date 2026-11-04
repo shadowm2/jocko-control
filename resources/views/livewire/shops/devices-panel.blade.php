@@ -32,7 +32,12 @@
                                 <flux:table.cell>
                                     <flux:badge size="sm" :color="$connectivity->color()" data-connectivity="{{ $connectivity->value }}">{{ $connectivity->label() }}</flux:badge>
                                 </flux:table.cell>
-                                <flux:table.cell><span dir="ltr">{{ $device->app_version ?: __('ui.common.none') }}</span></flux:table.cell>
+                                <flux:table.cell>
+                                    <span dir="ltr">{{ $device->app_version ?: __('ui.common.none') }}</span>
+                                    @if ($fleetVersions->isOutdated($device->app_version, $latestVersion))
+                                        <flux:badge size="sm" color="amber" class="ms-1" data-outdated title="{{ __('ui.dashboard.latest_is', ['version' => $latestVersion]) }}">{{ __('ui.dashboard.outdated') }}</flux:badge>
+                                    @endif
+                                </flux:table.cell>
                                 <flux:table.cell><x-datetime :value="$device->last_seen_at" ago /></flux:table.cell>
                                 <flux:table.cell><x-datetime :value="$device->last_sync_at" ago /></flux:table.cell>
                                 <flux:table.cell class="max-w-64">

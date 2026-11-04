@@ -75,6 +75,38 @@
         </flux:text>
     </flux:card>
 
+    @if ($versions['rows'] !== [])
+        <flux:card data-versions>
+            <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+                <flux:heading size="lg">{{ __('ui.dashboard.versions') }}</flux:heading>
+                @if ($versions['outdated_devices'] > 0)
+                    <flux:badge color="amber" size="sm" data-outdated-count="{{ $versions['outdated_devices'] }}">{{ __('ui.dashboard.outdated_devices', ['count' => Format::number($versions['outdated_devices'])]) }}</flux:badge>
+                @endif
+            </div>
+
+            @foreach ($versions['rows'] as $row)
+                <div class="flex items-center justify-between gap-4 border-t border-zinc-100 py-2 first:border-t-0 dark:border-zinc-800" data-version="{{ $row['version'] }}">
+                    <div class="flex min-w-0 items-center gap-2">
+                        <span class="truncate font-mono text-sm" dir="ltr">{{ $row['version'] }}</span>
+                        @if ($row['latest'])
+                            <flux:badge color="green" size="sm">{{ __('ui.dashboard.latest_version') }}</flux:badge>
+                        @elseif ($row['outdated'])
+                            <flux:badge color="amber" size="sm">{{ __('ui.dashboard.outdated') }}</flux:badge>
+                        @endif
+                    </div>
+                    <span class="shrink-0 tabular-nums text-sm text-zinc-500">{{ __('ui.dashboard.version_devices', ['count' => Format::number($row['devices'])]) }}</span>
+                </div>
+            @endforeach
+
+            @if ($versions['unreported_devices'] > 0)
+                <flux:text size="sm" class="mt-2 text-zinc-500">{{ __('ui.dashboard.unreported_version', ['count' => Format::number($versions['unreported_devices'])]) }}</flux:text>
+            @endif
+            @if ($versions['latest'] === null)
+                <flux:text size="sm" class="mt-2 text-zinc-500">{{ __('ui.dashboard.versions_hint') }}</flux:text>
+            @endif
+        </flux:card>
+    @endif
+
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <flux:card>
             <flux:heading size="lg" class="mb-4">{{ __('ui.dashboard.recent_activity') }}</flux:heading>

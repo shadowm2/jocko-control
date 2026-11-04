@@ -9,6 +9,7 @@ use App\Models\Shop;
 use App\Models\ShopDevice;
 use App\Models\SyncEvent;
 use App\Services\DeviceManagementService;
+use App\Services\FleetVersions;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
@@ -125,7 +126,7 @@ class DevicesPanel extends Component
         return $this->shop->devices()->findOrFail($deviceId);
     }
 
-    public function render(): View
+    public function render(FleetVersions $versions): View
     {
         $devices = $this->shop->devices()->with('shop:id,status')->orderBy('created_at')->orderBy('id')->get();
 
@@ -146,6 +147,8 @@ class DevicesPanel extends Component
             'devices' => $devices,
             'activity' => $activity,
             'targetDevice' => $this->targetDeviceId ? $devices->firstWhere('id', $this->targetDeviceId) : null,
+            'fleetVersions' => $versions,
+            'latestVersion' => $versions->summary()['latest'],
         ]);
     }
 }
