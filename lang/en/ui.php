@@ -359,6 +359,12 @@ return [
     'shop_data' => [
         'title' => 'Shop data',
         'subtitle' => 'Read-only copy of the data of ":shop", built from synchronization events',
+        'in_tables' => '{1} in 1 table|[2,*] in :count tables',
+        'find_table' => 'Find a table…',
+        'hide_empty' => 'Hide empty',
+        'changed' => 'Changed',
+        'nothing_yet' => 'Nothing yet',
+        'latest_changes' => 'Latest changes',
         'read_only_notice' => 'This data is for viewing only. It can only be changed in the shop\'s own installation and is updated here after synchronization.',
         'empty' => 'No data has been received from this shop yet.',
         'empty_hint' => 'Data appears here once the shop\'s local installation sends its events.',
