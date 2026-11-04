@@ -88,6 +88,42 @@ class ShopRecord extends Model
     {
         $query->whereRaw("coalesce(json_unquote(json_extract(data, '$.cheque_status')), '') != 'bounced'");
     }
+  
+    /** 
+     * Records by their label (or exact local id, when the term is all digits).
+     *
+     * @param  Builder<ShopRecord>  $query
+     */
+    public function scopeMatching(Builder $query, string $term): void
+    {
+        $term = trim($term);
+
+        if ($term === '') {
+            return;
+        }
+
+        $query->where(function (Builder $query) use ($term): void {
+            $query->where('label', 'like', '%'.addcslashes($term, '\\%_').'%');
+
+            if (ctype_digit($term)) {
+                $query->orWhere('local_id', (int) $term);
+            }
+        });
+    }
+
+    /**
+     * 'alive' (not removed in the shop), 'removed', or anything else for all.
+     *
+     * @param  Builder<ShopRecord>  $query
+     */
+    public function scopeInScope(Builder $query, string $scope): void
+    {
+        match ($scope) {
+            'alive' => $query->whereNull('removed_at'),
+            'removed' => $query->whereNotNull('removed_at'),
+            default => null,
+        };
+    }
 
     /**
      * A field of the mirrored record, or null when the shop never sent it.

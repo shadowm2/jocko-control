@@ -11,6 +11,7 @@ enum AuditAction: string
     case ShopUpdated = 'shop.updated';
     case ShopSuspended = 'shop.suspended';
     case ShopReactivated = 'shop.reactivated';
+    case ShopDataExported = 'shop.data_exported';
     case DeviceCreated = 'device.created';
     case DeviceRevoked = 'device.revoked';
     case DeviceTokenRotated = 'device.token_rotated';

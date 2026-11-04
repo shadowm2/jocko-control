@@ -67,7 +67,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | `php artisan jocko:prune` (scheduled daily) deletes synchronization events
-    | and audit entries older than this many days; 0 keeps them forever. The
+    | and audit entries (and the backlog history samples) older than this many days; 0 keeps them forever. The
     | shop mirror (`shop_records`) is not touched, but once old events are gone
     | `jocko:project-events` can no longer rebuild records they alone described:
     | have the shop run `control:resync` to send a fresh full copy instead.
@@ -77,6 +77,7 @@ return [
     'retention' => [
         'events_days' => (int) env('JOCKO_RETENTION_EVENTS_DAYS', 180),
         'audit_days' => (int) env('JOCKO_RETENTION_AUDIT_DAYS', 365),
+        'backlog_days' => (int) env('JOCKO_RETENTION_BACKLOG_DAYS', 30),
     ],
 
     /*

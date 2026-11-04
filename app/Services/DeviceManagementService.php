@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Enums\AuditAction;
 use App\Enums\DeviceStatus;
+use App\Models\DeviceBacklogSample;
 use App\Models\Shop;
 use App\Models\ShopDevice;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -21,6 +23,8 @@ class DeviceManagementService
     /**
      * Keys of the heartbeat's local_status object that are kept as diagnostics.
      */
+    private const BACKLOG_SAMPLE_MINUTES = 5;
+
     public const LOCAL_STATUS_KEYS = ['state', 'pending_events', 'oldest_pending_seconds', 'database_ok', 'disk_free_mb', 'uptime_seconds'];
 
     public function __construct(private readonly AuditLogger $audit) {}
@@ -91,8 +95,11 @@ class DeviceManagementService
     {
         $metadata = $device->metadata ?? [];
 
+        $status = [];
+
         if (isset($data['local_status']) && is_array($data['local_status'])) {
-            $metadata['local_status'] = array_intersect_key($data['local_status'], array_flip(self::LOCAL_STATUS_KEYS));
+            $status = array_intersect_key($data['local_status'], array_flip(self::LOCAL_STATUS_KEYS));
+            $metadata['local_status'] = $status;
             $metadata['local_status_at'] = now()->toIso8601String();
         }
 
@@ -121,8 +128,29 @@ class DeviceManagementService
         }
 
         $device->save();
+        $this->sampleBacklog($device, $status);
 
         return $device;
+    }
+
+    /**
+     * Keep a point of the backlog history, at most one every few minutes however often the
+     * device reports.
+     *
+     * @param  array<string, mixed>  $status
+     */
+    private function sampleBacklog(ShopDevice $device, array $status): void
+    {
+        if (! isset($status['pending_events']) || ! Cache::add('jocko.backlog-sample.'.$device->getKey(), true, now()->addMinutes(self::BACKLOG_SAMPLE_MINUTES))) {
+            return;
+        }
+
+        DeviceBacklogSample::query()->create([
+            'device_id' => $device->getKey(),
+            'pending_events' => (int) $status['pending_events'],
+            'oldest_pending_seconds' => isset($status['oldest_pending_seconds']) ? (int) $status['oldest_pending_seconds'] : null,
+            'sampled_at' => now(),
+        ]);
     }
 
     public function markSyncSucceeded(ShopDevice $device, bool $save = true): void
