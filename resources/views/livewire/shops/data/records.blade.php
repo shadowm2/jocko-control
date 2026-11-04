@@ -17,6 +17,7 @@
                 <flux:select.option value="all">{{ __('ui.shop_data.scope.all') }}</flux:select.option>
             </flux:select>
         </div>
+        <flux:button icon="arrow-down-tray" :href="route('shops.data.export', ['shop' => $shop, 'entity' => $entity, 'search' => $search, 'scope' => $scope])" data-export-csv>{{ __('ui.shop_data.export_csv') }}</flux:button>
         @if ($search !== '' || $scope !== 'alive')
             <flux:button variant="ghost" wire:click="resetFilters">{{ __('ui.common.reset') }}</flux:button>
         @endif

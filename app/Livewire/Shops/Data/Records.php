@@ -10,7 +10,6 @@ use App\Services\ShopDataCatalog;
 use App\Services\ShopFileGallery;
 use App\Services\ShopRecordReferences;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
@@ -63,20 +62,11 @@ class Records extends Component
 
     public function render(ShopDataCatalog $catalog, ShopRecordReferences $references, ShopFileGallery $gallery): View
     {
-        $search = trim($this->search);
-
         $records = ShopRecord::query()
             ->forShop($this->shopId)
             ->ofEntity($this->entity)
-            ->when($this->scope === 'alive', fn (Builder $query) => $query->alive())
-            ->when($this->scope === 'removed', fn (Builder $query) => $query->whereNotNull('removed_at'))
-            ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $query) use ($search): void {
-                $query->where('label', 'like', '%'.addcslashes($search, '\\%_').'%');
-
-                if (ctype_digit($search)) {
-                    $query->orWhere('local_id', (int) $search);
-                }
-            }))
+            ->inScope($this->scope)
+            ->matching($this->search)
             ->orderByDesc('local_id')
             ->simplePaginate(25);
 

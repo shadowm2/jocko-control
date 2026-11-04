@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\ShopDataExportController;
 use App\Http\Controllers\ShopFileController;
 use App\Livewire\Audit;
 use App\Livewire\Dashboard;
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'admin'])->group(function (): void {
 
     Route::livewire('shops/{shop}/data', Shops\Data\Overview::class)->name('shops.data');
     Route::livewire('shops/{shop}/data/{entity}', Shops\Data\Records::class)->name('shops.data.entity');
+    Route::get('shops/{shop}/data/{entity}/export', ShopDataExportController::class)->name('shops.data.export');
     Route::livewire('shops/{shop}/data/{entity}/{record}', Shops\Data\Show::class)->name('shops.data.show');
 
     Route::get('shops/{shop}/files/{media}', [ShopFileController::class, 'show'])->whereNumber('media')->name('shops.files.show');
