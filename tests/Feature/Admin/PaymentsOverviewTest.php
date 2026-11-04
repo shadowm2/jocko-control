@@ -122,4 +122,16 @@ class PaymentsOverviewTest extends TestCase
 
         $this->get(route('payments.index'))->assertRedirect(route('login'));
     }
+
+    public function test_a_bounced_cheque_is_not_money_collected(): void
+    {
+        $this->paid($this->alpha, 'cash', 1000, '2026-11-12');
+        $this->mirror($this->alpha, 'payment', $this->next++, ['method' => 'cheque', 'amount' => 5000, 'paid_at' => '2026-11-12', 'cheque_status' => 'bounced']);
+        $this->mirror($this->alpha, 'payment', $this->next++, ['method' => 'cheque', 'amount' => 2000, 'paid_at' => '2026-11-12', 'cheque_status' => 'pending']);
+
+        $summary = app(PaymentsOverview::class)->summary();
+
+        $this->assertSame(3000.0, $summary['totals']['today']);
+        $this->assertSame(['cheque' => 2000.0, 'cash' => 1000.0], $summary['byMethod']['today']);
+    }
 }

@@ -79,6 +79,10 @@ return [
                 'method' => 'enum',
                 'paid_at' => 'date',
                 'description' => 'text',
+                'cheque_number' => 'string',
+                'cheque_bank' => 'string',
+                'cheque_due_at' => 'date',
+                'cheque_status' => 'enum',
             ],
         ],
 

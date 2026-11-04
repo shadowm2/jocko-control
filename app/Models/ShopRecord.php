@@ -79,6 +79,17 @@ class ShopRecord extends Model
     }
 
     /**
+     * A bounced cheque was never money: leave it out of what was collected or paid.
+     * Other records, and payments that are not cheques, have no such status and stay.
+     *
+     * @param  Builder<ShopRecord>  $query
+     */
+    public function scopeNotBounced(Builder $query): void
+    {
+        $query->whereRaw("coalesce(json_unquote(json_extract(data, '$.cheque_status')), '') != 'bounced'");
+    }
+
+    /**
      * Records by their label (or exact local id, when the term is all digits).
      *
      * @param  Builder<ShopRecord>  $query
