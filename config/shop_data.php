@@ -42,6 +42,8 @@ return [
                 'order_number' => 'string',
                 'status' => 'enum',
                 'description' => 'text',
+                'odometer' => 'int',
+                'next_service_at' => 'date',
             ],
             'children' => ['order_item' => 'order_id', 'payment' => 'order_id'],
         ],

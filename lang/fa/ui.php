@@ -459,6 +459,8 @@ return [
             'car_company_id' => 'سازنده',
             'color_id' => 'رنگ',
             'hex' => 'کد رنگ',
+            'odometer' => 'کیلومتر',
+            'next_service_at' => 'سرویس بعدی',
             'manufactured_at' => 'تاریخ ساخت',
             'category_id' => 'دسته‌بندی',
             'parent_id' => 'دستهٔ والد',

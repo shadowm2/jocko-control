@@ -459,6 +459,8 @@ return [
             'car_company_id' => 'Maker',
             'color_id' => 'Color',
             'hex' => 'Color code',
+            'odometer' => 'Odometer (km)',
+            'next_service_at' => 'Next service',
             'manufactured_at' => 'Manufactured',
             'category_id' => 'Category',
             'parent_id' => 'Parent category',
