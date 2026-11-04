@@ -88,8 +88,8 @@ class ShopRecord extends Model
     {
         $query->whereRaw("coalesce(json_unquote(json_extract(data, '$.cheque_status')), '') != 'bounced'");
     }
-  
-    /** 
+
+    /**
      * Records by their label (or exact local id, when the term is all digits).
      *
      * @param  Builder<ShopRecord>  $query
