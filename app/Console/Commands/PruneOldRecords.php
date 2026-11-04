@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\AuditLog;
+use App\Models\DeviceBacklogSample;
 use App\Models\SyncEvent;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 #[Signature('jocko:prune {--dry-run : Only count what would be deleted}')]
-#[Description('Delete synchronization events and audit entries older than their retention period')]
+#[Description('Delete synchronization events, audit entries and backlog samples older than their retention period')]
 class PruneOldRecords extends Command
 {
     private const CHUNK = 1000;
@@ -20,6 +21,7 @@ class PruneOldRecords extends Command
     {
         $this->prune('sync events', 'events_days', SyncEvent::query(), 'received_at');
         $this->prune('audit entries', 'audit_days', AuditLog::query(), 'created_at');
+        $this->prune('backlog samples', 'backlog_days', DeviceBacklogSample::query(), 'sampled_at');
 
         return self::SUCCESS;
     }

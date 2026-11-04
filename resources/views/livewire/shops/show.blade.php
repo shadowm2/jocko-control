@@ -67,6 +67,8 @@
 
     <livewire:shops.devices-panel :shop-id="$shop->id" :key="'devices-'.$shop->id" />
 
+    <livewire:shops.backlog-chart :shop-id="$shop->id" :key="'backlog-'.$shop->id" />
+
     <livewire:shops.commands-panel :shop-id="$shop->id" :key="'commands-'.$shop->id" />
 
     <flux:card>

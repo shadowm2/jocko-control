@@ -91,6 +91,18 @@ return [
         'attention_hint' => 'A device is listed here when it has been silent for more than :offline, or reports at least :events unsent events, or has an unsent event older than :age.',
     ],
 
+    'backlog' => [
+        'title' => 'Unsent changes',
+        'hint' => 'The most changes any device of this shop had waiting to be sent. A gap means the shop was silent.',
+        'range_24h' => 'Last 24 hours',
+        'range_7d' => 'Last 7 days',
+        'peak' => 'Peak',
+        'latest' => 'Latest',
+        'unsent' => ':count unsent',
+        'no_data' => 'no report',
+        'empty' => 'No report from this shop yet in this period.',
+    ],
+
     'duration' => [
         'second' => ':count s',
         'minute' => ':count min',
