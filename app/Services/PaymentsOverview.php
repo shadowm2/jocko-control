@@ -94,6 +94,7 @@ class PaymentsOverview
         return ShopRecord::query()
             ->ofEntity('payment')
             ->alive()
+            ->notBounced()
             ->whereBetween('dated_at', [
                 CarbonImmutable::parse($window['from'], 'UTC')->startOfDay(),
                 CarbonImmutable::parse($window['to'], 'UTC')->endOfDay(),

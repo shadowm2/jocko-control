@@ -137,6 +137,7 @@ class ShopOrders
     {
         $sums = fn (string $entity): Collection => ShopRecord::query()
             ->forShop($shop)->ofEntity($entity)->alive()
+            ->when($entity === 'payment', fn (Builder $query) => $query->notBounced())
             ->whereIn('parent_id', $orderIds)
             ->groupBy('parent_id')
             ->selectRaw('parent_id, count(*) as line_count, coalesce(sum(amount), 0) as total')
@@ -204,7 +205,12 @@ class ShopOrders
      */
     private function withPaymentStatus(Builder $query, PaymentStatus $status): Builder
     {
-        $sum = fn (string $entity): string => "(select coalesce(sum(child.amount), 0) from shop_records as child where child.shop_id = shop_records.shop_id and child.entity = '{$entity}' and child.parent_id = shop_records.local_id and child.removed_at is null)";
+        $sum = function (string $entity): string {
+            // A bounced cheque was never money, as in ShopRecord::scopeNotBounced().
+            $bounced = $entity === 'payment' ? " and coalesce(json_unquote(json_extract(child.data, '$.cheque_status')), '') != 'bounced'" : '';
+
+            return "(select coalesce(sum(child.amount), 0) from shop_records as child where child.shop_id = shop_records.shop_id and child.entity = '{$entity}' and child.parent_id = shop_records.local_id and child.removed_at is null{$bounced})";
+        };
         $total = $sum('order_item');
         $paid = $sum('payment');
 

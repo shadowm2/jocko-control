@@ -229,4 +229,26 @@ class ShopOrdersPagesTest extends TestCase
             $this->assertSame([], array_values($actions), "{$component} must stay read-only.");
         }
     }
+
+    public function test_a_bounced_cheque_is_not_counted_as_paid(): void
+    {
+        // ORD-1 is billed 300 000 and has 100 000 paid.
+        $this->mirror($this->shop, 'payment', 50, ['order_id' => 1, 'amount' => '200000.0000', 'method' => 'cheque', 'paid_at' => now()->format('Y-m-d').'T00:00:00.000000Z', 'cheque_status' => 'pending']);
+        $bounced = $this->mirror($this->shop, 'payment', 51, ['order_id' => 1, 'amount' => '150000.0000', 'method' => 'cheque', 'paid_at' => now()->format('Y-m-d').'T00:00:00.000000Z', 'cheque_status' => 'bounced']);
+
+        $orders = app(ShopOrders::class);
+        $row = fn () => collect($orders->rows($this->shop, $orders->query($this->shop)->get()))->firstWhere('number', 'ORD-1');
+
+        $this->assertSame(300000.0, $row()['paid'], 'the waiting cheque counts, the bounced one does not');
+        $this->assertSame(PaymentStatus::Paid, $row()['payment']);
+        $this->assertContains('ORD-1', $this->numbers(['payment_status' => 'paid']));
+
+        // The waiting cheque bounces and the other one is cashed after all: 100 000 + 150 000.
+        $bounced->forceFill(['data' => [...$bounced->data, 'cheque_status' => 'cleared']])->save();
+        ShopRecord::query()->forShop($this->shop)->ofEntity('payment')->where('local_id', 50)->get()->each(fn (ShopRecord $record) => $record->forceFill(['data' => [...$record->data, 'cheque_status' => 'bounced']])->save());
+
+        $this->assertSame(250000.0, $row()['paid']);
+        $this->assertSame(PaymentStatus::Partial, $row()['payment']);
+        $this->assertNotContains('ORD-1', $this->numbers(['payment_status' => 'paid']));
+    }
 }
