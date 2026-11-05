@@ -87,6 +87,62 @@ class ShopDashboardTest extends TestCase
         $this->assertSame(300000.0, $metrics['monthSales'][5]);
     }
 
+    /**
+     * @param  array<string, mixed>  $extra
+     */
+    private function cheque(int $id, string $amount, ?string $dueOn, string $status = 'pending', array $extra = [], bool $removed = false): void
+    {
+        $this->mirror($this->shop, 'payment', $id, array_merge([
+            'order_id' => 1, 'amount' => $amount, 'method' => 'cheque', 'paid_at' => now()->toDateString(),
+            'cheque_number' => "CH-{$id}", 'cheque_bank' => 'Melli', 'cheque_due_at' => $dueOn, 'cheque_status' => $status,
+        ], $extra), "#{$id}", $removed);
+    }
+
+    public function test_cheques_add_up_what_is_pending_and_what_is_past_due_nearest_due_date_first(): void
+    {
+        $today = now('Asia/Tehran');
+
+        $this->cheque(1, '300000.0000', $today->copy()->addDays(10)->toDateString());
+        $this->cheque(2, '100000.0000', $today->copy()->subDays(3)->toDateString());
+        $this->cheque(3, '50000.0000', $today->toDateString());
+        $this->cheque(4, '70000.0000', null);
+        // Not waiting any more, never money, deleted, or not a cheque at all.
+        $this->cheque(5, '900000.0000', $today->copy()->subDays(9)->toDateString(), 'cleared');
+        $this->cheque(6, '800000.0000', $today->copy()->subDays(8)->toDateString(), 'bounced');
+        $this->cheque(7, '700000.0000', $today->copy()->subDays(7)->toDateString(), removed: true);
+        $this->cheque(8, '600000.0000', $today->copy()->subDays(6)->toDateString(), extra: ['method' => 'cash', 'cheque_status' => null]);
+
+        $metrics = app(ShopDashboardMetrics::class)->for($this->shop);
+
+        $this->assertSame(4, $metrics['pendingChequeCount']);
+        $this->assertSame(520000.0, $metrics['pendingChequeTotal']);
+        // Due today is not yet overdue, and a cheque without a date cannot be.
+        $this->assertSame(1, $metrics['overdueChequeCount']);
+        $this->assertSame(100000.0, $metrics['overdueChequeTotal']);
+        $this->assertSame(['CH-2', 'CH-3', 'CH-1', 'CH-4'], array_column($metrics['cheques'], 'number'));
+        $this->assertSame([true, false, false, false], array_column($metrics['cheques'], 'overdue'));
+        $this->assertNull($metrics['cheques'][3]['due']);
+    }
+
+    public function test_the_cheque_card_lists_each_cheque_and_flags_the_overdue_ones(): void
+    {
+        $this->mirror($this->shop, 'user', 1, ['type' => 'customer', 'first_name' => 'Ali', 'last_name' => 'Rezaei'], 'Ali Rezaei');
+
+        Livewire::test(Dashboard::class, ['shop' => $this->shop])
+            ->assertSee(__('ui.shop_dashboard.no_cheques'))
+            ->assertDontSee(__('ui.shop_dashboard.overdue'));
+
+        $this->cheque(1, '100000.0000', now('Asia/Tehran')->subDays(2)->toDateString());
+        $this->cheque(2, '250000.0000', now('Asia/Tehran')->addDays(5)->toDateString());
+
+        Livewire::test(Dashboard::class, ['shop' => $this->shop])
+            ->assertSee('CH-1')
+            ->assertSee('CH-2')
+            ->assertSee(Format::number(250000.0))
+            ->assertSee(Format::number(1).' '.__('ui.shop_dashboard.overdue'))
+            ->assertDontSee(__('ui.shop_dashboard.no_cheques'));
+    }
+
     private function close(int $id, int $daysAgo, string $difference, bool $removed = false): void
     {
         $day = now('Asia/Tehran')->subDays($daysAgo)->toDateString();

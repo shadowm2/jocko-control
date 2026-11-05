@@ -195,6 +195,36 @@
             @endforelse
         </flux:card>
 
+        <flux:card class="space-y-3" data-cheques>
+            <div class="flex items-center justify-between">
+                <flux:heading>
+                    {{ __('ui.shop_dashboard.cheques') }}
+                    @if ($overdueChequeCount)
+                        <flux:badge color="red" size="sm" class="ms-1">{{ Format::number($overdueChequeCount) }} {{ __('ui.shop_dashboard.overdue') }}</flux:badge>
+                    @endif
+                    <flux:text size="sm" class="font-normal">
+                        {{ __('ui.shop_dashboard.cheques_pending', ['count' => Format::number($pendingChequeCount), 'total' => Format::number($pendingChequeTotal)]) }}
+                    </flux:text>
+                </flux:heading>
+                <flux:button :href="route('shops.data.entity', [$shop, 'payment'])" size="sm" variant="ghost" wire:navigate>{{ __('ui.shop_dashboard.view_all') }}</flux:button>
+            </div>
+
+            @forelse ($cheques as $cheque)
+                <a href="{{ route('shops.data.show', [$shop, 'payment', $cheque['record']]) }}" wire:navigate class="flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-zinc-50 dark:hover:bg-white/5" data-cheque>
+                    <div class="min-w-0">
+                        <div class="truncate font-medium" dir="ltr">{{ $cheque['number'] ?? '#'.$cheque['record']->local_id }}</div>
+                        <flux:text size="sm" class="truncate">{{ $cheque['bank'] }}</flux:text>
+                    </div>
+                    <div class="flex shrink-0 items-center gap-3">
+                        <span class="text-sm tabular-nums">{{ Format::number($cheque['amount']) }}</span>
+                        <flux:badge :color="$cheque['overdue'] ? 'red' : 'zinc'" size="sm">{{ Format::date($cheque['due']) }}</flux:badge>
+                    </div>
+                </a>
+            @empty
+                <flux:text class="py-8 text-center">{{ __('ui.shop_dashboard.no_cheques') }}</flux:text>
+            @endforelse
+        </flux:card>
+
         <flux:card class="space-y-3" data-cash-differences>
             <div class="flex items-center justify-between">
                 <flux:heading>
