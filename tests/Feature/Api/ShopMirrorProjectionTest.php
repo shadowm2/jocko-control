@@ -49,6 +49,23 @@ class ShopMirrorProjectionTest extends TestCase
         $this->assertFalse($record->isRemoved());
     }
 
+    public function test_a_closed_day_is_mirrored_by_its_date_and_its_amounts_are_kept(): void
+    {
+        $issued = $this->issueDevice();
+        $event = $this->recordEvent('cash_close', 'created', [
+            'id' => 4, 'business_date' => '2026-11-04', 'expected_cash' => '150.0000', 'counted_cash' => '140.0000',
+            'difference' => '-10.0000', 'note' => 'short', 'closed_by' => 1, 'totals' => ['cash' => 150],
+        ]);
+
+        $this->postJson('/api/v1/sync/events', ['events' => [$event]], $this->bearer($issued))->assertOk();
+
+        $record = ShopRecord::sole();
+        $this->assertSame('cash_close', $record->entity);
+        $this->assertSame('2026-11-04', $record->dated_at->toDateString());
+        $this->assertSame('-10.0000', (string) $record->field('difference'));
+        $this->assertNull($record->field('totals'));
+    }
+
     public function test_a_later_event_replaces_the_state_and_the_same_event_twice_changes_nothing(): void
     {
         $issued = $this->issueDevice();

@@ -86,6 +86,21 @@ return [
             ],
         ],
 
+        'cash_close' => [
+            'group' => 'sales',
+            'date' => ['business_date'],
+            'label' => ['business_date'],
+            'columns' => ['expected_cash', 'counted_cash', 'difference'],
+            'fields' => [
+                'business_date' => 'date',
+                'expected_cash' => 'decimal',
+                'counted_cash' => 'decimal',
+                'difference' => 'decimal',
+                'note' => 'text',
+                'closed_by' => 'ref:user',
+            ],
+        ],
+
         'user' => [
             'group' => 'people',
             'label' => ['first_name', 'last_name'],
