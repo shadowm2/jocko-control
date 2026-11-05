@@ -44,6 +44,14 @@ class ShopDashboardMetrics
      *     lowStock: list<array{record: ShopRecord, item: ?string, warehouse: ?string, quantity: mixed, minimum: mixed}>,
      *     recentOrders: list<OrderRow>,
      *     recentPurchases: list<array{record: ShopRecord, number: string, supplier: ?string, warehouse: ?string, total: float}>,
+     *     pendingChequeCount: int,
+     *     pendingChequeTotal: float,
+     *     overdueChequeCount: int,
+     *     overdueChequeTotal: float,
+     *     cheques: list<array{record: ShopRecord, number: ?string, bank: ?string, amount: float, due: ?CarbonImmutable, overdue: bool}>,
+     *     cashCloseCount: int,
+     *     cashDifferenceCount: int,
+     *     cashDifferences: list<array{record: ShopRecord, difference: float}>,
      *     monthLabels: list<string>, monthSales: list<float>, monthPurchases: list<float>,
      *     dayLabels: list<string>, daySales: list<float>
      * }
@@ -69,6 +77,8 @@ class ShopDashboardMetrics
             'lowStock' => $this->presentLowStock($shop, $lowStock),
             'recentOrders' => $this->orders->rows($shop, $this->orders->query($shop)->limit(self::LIST_SIZE)->get()),
             'recentPurchases' => $this->recentPurchases($shop),
+            ...$this->cheques($shop),
+            ...$this->cashCloses($shop),
             ...$this->trends($shop),
         ];
     }
@@ -142,6 +152,67 @@ class ShopDashboardMetrics
             'quantity' => $row->field('quantity'),
             'minimum' => $row->field('min_quantity'),
         ])->all();
+    }
+
+    /**
+     * Cheques received and not yet cleared or bounced, and how many of them are
+     * past their due date (a calendar date, in the shop's day).
+     *
+     * @return array{pendingChequeCount: int, pendingChequeTotal: float, overdueChequeCount: int, overdueChequeTotal: float, cheques: list<array{record: ShopRecord, number: ?string, bank: ?string, amount: float, due: ?CarbonImmutable, overdue: bool}>}
+     */
+    private function cheques(Shop $shop): array
+    {
+        $today = CarbonImmutable::now($shop->timezone)->toDateString();
+        $due = "substr(json_unquote(json_extract(data, '\$.cheque_due_at')), 1, 10)";
+
+        $pending = $this->entity($shop, 'payment')
+            ->where('data->method', 'cheque')
+            ->where('data->cheque_status', 'pending');
+        $overdue = (clone $pending)->whereRaw("{$due} < ?", [$today]);
+
+        $rows = (clone $pending)->orderByRaw("coalesce({$due}, '9999-12-31')")->orderBy('local_id')->limit(self::LIST_SIZE)->get();
+
+        return [
+            'pendingChequeCount' => (clone $pending)->count(),
+            'pendingChequeTotal' => (float) (clone $pending)->sum('amount'),
+            'overdueChequeCount' => (clone $overdue)->count(),
+            'overdueChequeTotal' => (float) (clone $overdue)->sum('amount'),
+            'cheques' => array_values($rows->map(function (ShopRecord $record) use ($today): array {
+                $dueOn = $record->field('cheque_due_at');
+                $day = is_string($dueOn) && $dueOn !== '' ? CarbonImmutable::parse(substr($dueOn, 0, 10), 'UTC') : null;
+
+                return [
+                    'record' => $record,
+                    'number' => $record->field('cheque_number'),
+                    'bank' => $record->field('cheque_bank'),
+                    'amount' => (float) $record->amount,
+                    'due' => $day,
+                    'overdue' => $day !== null && $day->toDateString() < $today,
+                ];
+            })->all()),
+        ];
+    }
+
+    /**
+     * The days the till was closed in the last DAYS days, and those where the
+     * counted cash was not what the day's payments said it should be.
+     *
+     * @return array{cashCloseCount: int, cashDifferenceCount: int, cashDifferences: list<array{record: ShopRecord, difference: float}>}
+     */
+    private function cashCloses(Shop $shop): array
+    {
+        $since = CarbonImmutable::now($shop->timezone)->startOfDay()->subDays(self::DAYS - 1)->toDateString();
+
+        $closes = $this->entity($shop, 'cash_close')->where('dated_at', '>=', $since.' 00:00:00.000');
+        $off = (clone $closes)->whereRaw("cast(json_unquote(json_extract(data, '\$.difference')) as decimal(18,4)) != 0");
+
+        return [
+            'cashCloseCount' => (clone $closes)->count(),
+            'cashDifferenceCount' => (clone $off)->count(),
+            'cashDifferences' => array_values($off->orderByDesc('dated_at')->limit(self::LIST_SIZE)->get()
+                ->map(fn (ShopRecord $record): array => ['record' => $record, 'difference' => (float) $record->field('difference')])
+                ->all()),
+        ];
     }
 
     /**
