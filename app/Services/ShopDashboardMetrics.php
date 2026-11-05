@@ -44,6 +44,9 @@ class ShopDashboardMetrics
      *     lowStock: list<array{record: ShopRecord, item: ?string, warehouse: ?string, quantity: mixed, minimum: mixed}>,
      *     recentOrders: list<OrderRow>,
      *     recentPurchases: list<array{record: ShopRecord, number: string, supplier: ?string, warehouse: ?string, total: float}>,
+     *     cashCloseCount: int,
+     *     cashDifferenceCount: int,
+     *     cashDifferences: list<array{record: ShopRecord, difference: float}>,
      *     monthLabels: list<string>, monthSales: list<float>, monthPurchases: list<float>,
      *     dayLabels: list<string>, daySales: list<float>
      * }
@@ -69,6 +72,7 @@ class ShopDashboardMetrics
             'lowStock' => $this->presentLowStock($shop, $lowStock),
             'recentOrders' => $this->orders->rows($shop, $this->orders->query($shop)->limit(self::LIST_SIZE)->get()),
             'recentPurchases' => $this->recentPurchases($shop),
+            ...$this->cashCloses($shop),
             ...$this->trends($shop),
         ];
     }
@@ -142,6 +146,28 @@ class ShopDashboardMetrics
             'quantity' => $row->field('quantity'),
             'minimum' => $row->field('min_quantity'),
         ])->all();
+    }
+
+    /**
+     * The days the till was closed in the last DAYS days, and those where the
+     * counted cash was not what the day's payments said it should be.
+     *
+     * @return array{cashCloseCount: int, cashDifferenceCount: int, cashDifferences: list<array{record: ShopRecord, difference: float}>}
+     */
+    private function cashCloses(Shop $shop): array
+    {
+        $since = CarbonImmutable::now($shop->timezone)->startOfDay()->subDays(self::DAYS - 1)->toDateString();
+
+        $closes = $this->entity($shop, 'cash_close')->where('dated_at', '>=', $since.' 00:00:00.000');
+        $off = (clone $closes)->whereRaw("cast(json_unquote(json_extract(data, '\$.difference')) as decimal(18,4)) != 0");
+
+        return [
+            'cashCloseCount' => (clone $closes)->count(),
+            'cashDifferenceCount' => (clone $off)->count(),
+            'cashDifferences' => array_values($off->orderByDesc('dated_at')->limit(self::LIST_SIZE)->get()
+                ->map(fn (ShopRecord $record): array => ['record' => $record, 'difference' => (float) $record->field('difference')])
+                ->all()),
+        ];
     }
 
     /**

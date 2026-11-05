@@ -339,6 +339,9 @@ return [
         'no_orders' => 'No orders yet',
         'no_purchases' => 'No purchases yet',
         'well_stocked' => 'Every item is sufficiently stocked',
+        'cash_differences' => 'Cash differences',
+        'cash_balanced' => 'Every closed day balanced',
+        'no_cash_closes' => 'No day has been closed',
     ],
 
     'shop_orders' => [

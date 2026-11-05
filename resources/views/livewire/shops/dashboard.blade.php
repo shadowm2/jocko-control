@@ -194,5 +194,27 @@
                 <flux:text class="py-8 text-center">{{ __('ui.shop_dashboard.no_purchases') }}</flux:text>
             @endforelse
         </flux:card>
+
+        <flux:card class="space-y-3" data-cash-differences>
+            <div class="flex items-center justify-between">
+                <flux:heading>
+                    {{ __('ui.shop_dashboard.cash_differences') }}
+                    @if ($cashDifferenceCount)
+                        <flux:badge color="red" size="sm" class="ms-1">{{ Format::number($cashDifferenceCount) }}</flux:badge>
+                    @endif
+                    <flux:text size="sm" class="font-normal">{{ __('ui.shop_dashboard.last_30_days') }}</flux:text>
+                </flux:heading>
+                <flux:button :href="route('shops.data.entity', [$shop, 'cash_close'])" size="sm" variant="ghost" wire:navigate>{{ __('ui.shop_dashboard.view_all') }}</flux:button>
+            </div>
+
+            @forelse ($cashDifferences as $close)
+                <a href="{{ route('shops.data.show', [$shop, 'cash_close', $close['record']]) }}" wire:navigate class="flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-zinc-50 dark:hover:bg-white/5">
+                    <span class="font-medium">{{ Format::date($close['record']->dated_at) }}</span>
+                    <span @class(['text-sm font-medium tabular-nums', 'text-red-600 dark:text-red-400' => $close['difference'] < 0, 'text-amber-600 dark:text-amber-400' => $close['difference'] > 0]) dir="ltr">{{ $close['difference'] > 0 ? '+' : '' }}{{ Format::number($close['difference']) }}</span>
+                </a>
+            @empty
+                <flux:text class="py-8 text-center">{{ $cashCloseCount ? __('ui.shop_dashboard.cash_balanced') : __('ui.shop_dashboard.no_cash_closes') }}</flux:text>
+            @endforelse
+        </flux:card>
     @endif
 </div>

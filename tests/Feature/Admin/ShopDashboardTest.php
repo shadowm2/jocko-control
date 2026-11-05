@@ -87,6 +87,60 @@ class ShopDashboardTest extends TestCase
         $this->assertSame(300000.0, $metrics['monthSales'][5]);
     }
 
+    private function close(int $id, int $daysAgo, string $difference, bool $removed = false): void
+    {
+        $day = now('Asia/Tehran')->subDays($daysAgo)->toDateString();
+
+        $this->mirror($this->shop, 'cash_close', $id, [
+            'business_date' => $day, 'expected_cash' => '100.0000', 'counted_cash' => '100.0000', 'difference' => $difference,
+        ], $day, $removed);
+    }
+
+    public function test_cash_differences_count_unbalanced_days_of_the_last_thirty_days_newest_first(): void
+    {
+        $this->close(1, 0, '0.0000');
+        $this->close(2, 1, '-25000.0000');
+        $this->close(3, 3, '5000.0000');
+        $this->close(4, 29, '-1.0000');
+        $this->close(5, 31, '-99999.0000');
+        $this->close(6, 2, '-77777.0000', removed: true);
+
+        $metrics = app(ShopDashboardMetrics::class)->for($this->shop);
+
+        // The balanced day, the one 31 days ago and the removed one are not differences;
+        // only the days inside the window are closes at all.
+        $this->assertSame(4, $metrics['cashCloseCount']);
+        $this->assertSame(3, $metrics['cashDifferenceCount']);
+        $this->assertSame([-25000.0, 5000.0, -1.0], array_column($metrics['cashDifferences'], 'difference'));
+    }
+
+    public function test_the_cash_card_tells_a_shop_that_never_closes_from_one_that_balances(): void
+    {
+        $this->mirror($this->shop, 'user', 1, ['type' => 'customer', 'first_name' => 'Ali', 'last_name' => 'Rezaei'], 'Ali Rezaei');
+
+        Livewire::test(Dashboard::class, ['shop' => $this->shop])
+            ->assertSee(__('ui.shop_dashboard.no_cash_closes'))
+            ->assertDontSee(__('ui.shop_dashboard.cash_balanced'));
+
+        $this->close(1, 0, '0.0000');
+
+        Livewire::test(Dashboard::class, ['shop' => $this->shop])
+            ->assertSee(__('ui.shop_dashboard.cash_balanced'))
+            ->assertDontSee(__('ui.shop_dashboard.no_cash_closes'));
+    }
+
+    public function test_the_cash_card_shows_a_shortage_and_an_overage_with_their_sign(): void
+    {
+        $this->mirror($this->shop, 'user', 1, ['type' => 'customer', 'first_name' => 'Ali', 'last_name' => 'Rezaei'], 'Ali Rezaei');
+        $this->close(1, 1, '-25000.0000');
+        $this->close(2, 2, '5000.0000');
+
+        Livewire::test(Dashboard::class, ['shop' => $this->shop])
+            ->assertSee(__('ui.shop_dashboard.cash_differences'))
+            ->assertSee(Format::number(-25000.0))
+            ->assertSee('+'.Format::number(5000.0));
+    }
+
     public function test_recent_orders_come_newest_first_with_customer_car_and_total(): void
     {
         $this->seedShop($this->shop);
