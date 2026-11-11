@@ -54,7 +54,7 @@
                 <div>
                     <dt class="text-zinc-500">{{ __('ui.plans.devices_used') }}</dt>
                     <dd class="font-medium">
-                        {{ $activeDevices }} / {{ $shop->plan->max_devices ?? __('ui.plans.unlimited') }}
+                        <span dir="ltr" class="inline-block">{{ $activeDevices }} / {{ $shop->plan->max_devices ?? __('ui.plans.unlimited') }}</span>
                         @if ($overLimit)
                             <flux:badge size="sm" color="red" inset="top bottom">{{ __('ui.plans.over_limit') }}</flux:badge>
                         @endif

@@ -50,7 +50,7 @@
     </flux:card>
 
     <flux:modal name="plan-form" class="md:w-[32rem]">
-        <form wire:submit="save" class="space-y-5">
+        <form wire:submit="save" class="flex flex-col gap-5">
             <flux:heading size="lg">{{ $planId ? __('ui.plans.edit') : __('ui.plans.create') }}</flux:heading>
 
             <flux:field>
