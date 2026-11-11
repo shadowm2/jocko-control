@@ -46,6 +46,7 @@ class Index extends Component
 
         $shops = Shop::query()
             ->search($this->search)
+            ->with('plan:id,name')
             ->when($status, fn (Builder $query) => $query->where('status', $status->value))
             ->withCount([
                 'devices as active_devices_count' => fn (Builder $query) => $query->where('status', DeviceStatus::Active->value),

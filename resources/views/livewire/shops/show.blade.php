@@ -34,6 +34,38 @@
         <flux:callout variant="warning" icon="exclamation-triangle" :heading="__('ui.shops.suspended_banner')" />
     @endif
 
+    @php($overLimit = $shop->plan?->max_devices !== null && $activeDevices > $shop->plan->max_devices)
+
+    <flux:card>
+        <flux:heading size="lg" class="mb-4">{{ __('ui.plans.billing') }}</flux:heading>
+        @if ($shop->plan)
+            <dl class="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                    <dt class="text-zinc-500">{{ __('ui.plans.plan') }}</dt>
+                    <dd class="font-medium">{{ $shop->plan->name }} <span dir="ltr" class="text-zinc-500">({{ number_format($shop->plan->price) }} / {{ __('ui.plans.days', ['count' => $shop->plan->billing_days]) }})</span></dd>
+                </div>
+                <div>
+                    <dt class="text-zinc-500">{{ __('ui.plans.paid_until') }}</dt>
+                    <dd class="font-medium">
+                        <span dir="ltr">{{ $shop->paidUntil()?->format('Y-m-d') ?? '—' }}</span>
+                        <flux:badge size="sm" :color="$shop->billingStatus()->color()" inset="top bottom">{{ $shop->billingStatus()->label() }}</flux:badge>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-zinc-500">{{ __('ui.plans.devices_used') }}</dt>
+                    <dd class="font-medium">
+                        {{ $activeDevices }} / {{ $shop->plan->max_devices ?? __('ui.plans.unlimited') }}
+                        @if ($overLimit)
+                            <flux:badge size="sm" color="red" inset="top bottom">{{ __('ui.plans.over_limit') }}</flux:badge>
+                        @endif
+                    </dd>
+                </div>
+            </dl>
+        @else
+            <flux:text>{{ __('ui.plans.no_plan_hint') }}</flux:text>
+        @endif
+    </flux:card>
+
     <flux:card>
         <flux:heading size="lg" class="mb-4">{{ __('ui.shops.information') }}</flux:heading>
         <dl class="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">

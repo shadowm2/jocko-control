@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Shops;
 
+use App\Enums\DeviceStatus;
 use App\Events\ShopChanged;
 use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Livewire\Concerns\RefreshesLive;
@@ -89,7 +90,8 @@ class Show extends Component
         $lastSyncAt = $shop->devices()->max('last_sync_at');
 
         return view('livewire.shops.show', [
-            'shop' => $shop,
+            'shop' => $shop->loadMissing('plan'),
+            'activeDevices' => $shop->devices()->where('status', DeviceStatus::Active->value)->count(),
             'lastSyncAt' => $lastSyncAt ? Carbon::parse($lastSyncAt, 'UTC') : null,
             'events' => SyncEvent::query()
                 ->where('shop_id', $shop->getKey())

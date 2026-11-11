@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BillingStatus;
 use App\Enums\ShopStatus;
 use Carbon\CarbonInterface;
 use Database\Factories\ShopFactory;
@@ -10,9 +11,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'slug', 'owner_name', 'email', 'phone', 'address', 'timezone', 'status', 'notes'])]
+#[Fillable(['name', 'slug', 'owner_name', 'email', 'phone', 'address', 'timezone', 'status', 'notes', 'plan_id', 'paid_until'])]
 class Shop extends Model
 {
     /** @use HasFactory<ShopFactory> */
@@ -26,7 +28,41 @@ class Shop extends Model
         return [
             'status' => ShopStatus::class,
             'restore_allowed_until' => 'datetime',
+            'paid_until' => 'date',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Plan, $this>
+     */
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    public function paidUntil(): ?CarbonInterface
+    {
+        $until = $this->getAttribute('paid_until');
+
+        return $until instanceof CarbonInterface ? $until : null;
+    }
+
+    /**
+     * Where the shop stands with its plan. The paid-until day itself still counts as paid.
+     */
+    public function billingStatus(): BillingStatus
+    {
+        $until = $this->paidUntil();
+
+        if ($this->plan_id === null || $until === null) {
+            return BillingStatus::NoPlan;
+        }
+
+        if ($until->copy()->endOfDay()->isPast()) {
+            return BillingStatus::Expired;
+        }
+
+        return $until->copy()->startOfDay()->lte(now()->addDays(BillingStatus::DUE_SOON_DAYS)->endOfDay()) ? BillingStatus::DueSoon : BillingStatus::Paid;
     }
 
     /**

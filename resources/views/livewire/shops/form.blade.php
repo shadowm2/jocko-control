@@ -49,6 +49,25 @@
                 </flux:field>
             </div>
 
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <flux:field>
+                    <flux:label>{{ __('ui.plans.plan') }}</flux:label>
+                    <flux:select wire:model="plan_id">
+                        <flux:select.option value="">{{ __('ui.plans.none') }}</flux:select.option>
+                        @foreach ($plans as $plan)
+                            <flux:select.option :value="$plan->id">{{ $plan->name }}@unless ($plan->is_active) ({{ __('ui.plans.inactive') }})@endunless</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    <flux:error name="plan_id" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('ui.plans.paid_until') }}</flux:label>
+                    <flux:input type="date" wire:model="paid_until" dir="ltr" />
+                    <flux:error name="paid_until" />
+                </flux:field>
+            </div>
+
             <flux:field>
                 <flux:label>{{ __('ui.shops.address') }}</flux:label>
                 <flux:textarea wire:model="address" rows="2" />
