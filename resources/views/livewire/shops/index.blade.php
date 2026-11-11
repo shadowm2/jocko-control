@@ -60,9 +60,11 @@
                             <flux:table.cell>
                                 {{ __('ui.shops.devices_online', ['online' => Format::number($shop->online_devices_count), 'total' => Format::number($shop->active_devices_count)]) }}
                             </flux:table.cell>
-                            <flux:table.cell class="text-end">
-                                <flux:button size="sm" variant="ghost" :href="route('shops.show', $shop)" wire:navigate>{{ __('ui.common.view') }}</flux:button>
-                                <flux:button size="sm" variant="ghost" icon="pencil-square" :href="route('shops.edit', $shop)" wire:navigate :aria-label="__('ui.common.edit')" />
+                            <flux:table.cell>
+                                <div class="flex items-center justify-end gap-1">
+                                    <flux:button size="sm" variant="ghost" :href="route('shops.show', $shop)" wire:navigate>{{ __('ui.common.view') }}</flux:button>
+                                    <flux:button size="sm" variant="ghost" icon="pencil-square" :href="route('shops.edit', $shop)" wire:navigate :aria-label="__('ui.common.edit')" />
+                                </div>
                             </flux:table.cell>
                         </flux:table.row>
                     @endforeach
