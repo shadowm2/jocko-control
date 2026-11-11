@@ -20,6 +20,9 @@
             <flux:sidebar.item icon="building-storefront" :href="route('shops.index')" :current="request()->routeIs('shops.*')" wire:navigate>
                 {{ __('ui.nav.shops') }}
             </flux:sidebar.item>
+            <flux:sidebar.item icon="credit-card" :href="route('plans.index')" :current="request()->routeIs('plans.*')" wire:navigate>
+                {{ __('ui.nav.plans') }}
+            </flux:sidebar.item>
             <flux:sidebar.item icon="banknotes" :href="route('payments.index')" :current="request()->routeIs('payments.*')" wire:navigate>
                 {{ __('ui.nav.payments') }}
             </flux:sidebar.item>

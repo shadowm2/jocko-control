@@ -42,6 +42,7 @@
                     <flux:table.column>{{ __('ui.shops.slug') }}</flux:table.column>
                     <flux:table.column>{{ __('ui.common.status') }}</flux:table.column>
                     <flux:table.column>{{ __('ui.shops.devices') }}</flux:table.column>
+                    <flux:table.column>{{ __('ui.plans.plan') }}</flux:table.column>
                     <flux:table.column></flux:table.column>
                 </flux:table.columns>
                 <flux:table.rows>
@@ -59,6 +60,14 @@
                             </flux:table.cell>
                             <flux:table.cell>
                                 {{ __('ui.shops.devices_online', ['online' => Format::number($shop->online_devices_count), 'total' => Format::number($shop->active_devices_count)]) }}
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                @if ($shop->plan)
+                                    <div>{{ $shop->plan->name }}</div>
+                                    <flux:badge size="sm" :color="$shop->billingStatus()->color()" inset="top bottom">{{ $shop->billingStatus()->label() }}</flux:badge>
+                                @else
+                                    <span class="text-zinc-400">{{ __('ui.plans.none') }}</span>
+                                @endif
                             </flux:table.cell>
                             <flux:table.cell>
                                 <div class="flex items-center justify-end gap-1">

@@ -3,6 +3,7 @@
 namespace App\Livewire\Shops;
 
 use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Models\Plan;
 use App\Models\Shop;
 use App\Services\ShopManagementService;
 use Illuminate\Contracts\View\View;
@@ -34,6 +35,10 @@ class Form extends Component
 
     public string $notes = '';
 
+    public string $plan_id = '';
+
+    public string $paid_until = '';
+
     public function mount(?Shop $shop = null): void
     {
         if ($shop?->exists) {
@@ -44,6 +49,8 @@ class Form extends Component
             $this->phone = (string) $shop->phone;
             $this->address = (string) $shop->address;
             $this->notes = (string) $shop->notes;
+            $this->plan_id = (string) $shop->plan_id;
+            $this->paid_until = $shop->paidUntil()?->format('Y-m-d') ?? '';
         }
     }
 
@@ -68,6 +75,8 @@ class Form extends Component
             'address' => ['nullable', 'string', 'max:500'],
             'timezone' => ['required', Rule::in(timezone_identifiers_list())],
             'notes' => ['nullable', 'string', 'max:5000'],
+            'plan_id' => ['nullable', 'integer', Rule::exists('plans', 'id')],
+            'paid_until' => ['nullable', 'date'],
         ];
     }
 
@@ -97,6 +106,7 @@ class Form extends Component
         return view('livewire.shops.form', [
             'title' => $title,
             'timezones' => timezone_identifiers_list(),
+            'plans' => Plan::query()->orderByDesc('is_active')->orderBy('price')->get(['id', 'name', 'is_active']),
         ])->layout('components.layouts.app', ['title' => $title]);
     }
 }
