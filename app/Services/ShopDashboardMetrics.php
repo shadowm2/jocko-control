@@ -25,6 +25,9 @@ class ShopDashboardMetrics
 
     private const DAYS = 30;
 
+    /** Upper limits, in days, of the first brackets of what customers owe; the last bracket is everything older. */
+    public const AGING_DAYS = [30, 60, 90];
+
     /** Purchases that count as spending: ordered, partly or fully received. */
     private const SPENDING = ['ordered', 'partially_received', 'received'];
 
@@ -49,6 +52,8 @@ class ShopDashboardMetrics
      *     overdueChequeCount: int,
      *     overdueChequeTotal: float,
      *     cheques: list<array{record: ShopRecord, number: ?string, bank: ?string, amount: float, due: ?CarbonImmutable, overdue: bool}>,
+     *     debtTotal: float,
+     *     debtAging: list<float>,
      *     cashCloseCount: int,
      *     cashDifferenceCount: int,
      *     cashDifferences: list<array{record: ShopRecord, difference: float}>,
@@ -78,6 +83,7 @@ class ShopDashboardMetrics
             'recentOrders' => $this->orders->rows($shop, $this->orders->query($shop)->limit(self::LIST_SIZE)->get()),
             'recentPurchases' => $this->recentPurchases($shop),
             ...$this->cheques($shop),
+            ...$this->debts($shop),
             ...$this->cashCloses($shop),
             ...$this->trends($shop),
         ];
@@ -191,6 +197,44 @@ class ShopDashboardMetrics
                 ];
             })->all()),
         ];
+    }
+
+    /**
+     * What customers still owe on orders that are not cancelled (bounced
+     * cheques are not payments), split by how old the order is.
+     *
+     * @return array{debtTotal: float, debtAging: list<float>}
+     */
+    private function debts(Shop $shop): array
+    {
+        $aging = array_fill(0, count(self::AGING_DAYS) + 1, 0.0);
+        $now = CarbonImmutable::now($shop->timezone);
+
+        $customers = $this->entity($shop, 'user')->where('data->type', 'customer')->pluck('local_id')->all();
+
+        $this->entity($shop, 'order')
+            ->where('data->status', '!=', 'cancelled')
+            ->whereIn('data->user_id', $customers)
+            ->orderBy('local_id')
+            ->chunk(500, function (Collection $orders) use ($shop, $now, &$aging): void {
+                $money = $this->orders->money($shop, array_values(array_map('intval', $orders->pluck('local_id')->all())));
+
+                foreach ($orders as $order) {
+                    $owed = round($money[$order->local_id]['total'] - $money[$order->local_id]['paid'], 2);
+
+                    if ($owed <= 0) {
+                        continue;
+                    }
+
+                    $since = $order->dated_at ?? $order->created_at;
+                    $days = $since === null ? 0 : (int) CarbonImmutable::parse($since)->setTimezone($shop->timezone)->diffInDays($now);
+                    $aging[count(array_filter(self::AGING_DAYS, fn (int $limit): bool => $days > $limit))] += $owed;
+                }
+            });
+
+        $aging = array_map(fn (float $amount): float => round($amount, 2), $aging);
+
+        return ['debtTotal' => round(array_sum($aging), 2), 'debtAging' => $aging];
     }
 
     /**
