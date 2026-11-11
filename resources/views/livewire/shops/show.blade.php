@@ -81,6 +81,10 @@
                 </div>
             @endforeach
             <div>
+                <dt class="text-zinc-500">{{ __('ui.shops.pictures') }}</dt>
+                <dd class="font-medium">{{ $shop->keepsOriginalPictures() ? __('ui.shops.pictures_original') : __('ui.shops.pictures_preview') }}</dd>
+            </div>
+            <div>
                 <dt class="text-zinc-500">{{ __('ui.shops.last_sync') }}</dt>
                 <dd class="font-medium"><x-datetime :value="$lastSyncAt" /></dd>
             </div>

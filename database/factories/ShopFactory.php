@@ -29,6 +29,7 @@ class ShopFactory extends Factory
             'timezone' => 'Asia/Tehran',
             'status' => ShopStatus::Active,
             'notes' => null,
+            'keep_original_pictures' => true,
         ];
     }
 

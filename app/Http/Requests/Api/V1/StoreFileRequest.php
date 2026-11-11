@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1;
 
+use App\Models\ShopDevice;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -21,9 +22,18 @@ class StoreFileRequest extends FormRequest
         return [
             'media_id' => ['required', 'integer', 'min:1', 'max:4294967295'],
             'sha256' => ['required', 'string', 'regex:/^[0-9a-f]{64}$/'],
-            // Previews only: the shop sends a downscaled copy, never the original.
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:'.(int) config('jocko.files.max_kilobytes')],
+            // A downscaled preview, unless an administrator switched this shop to keep originals.
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:'.$this->maxKilobytes()],
         ];
+    }
+
+    private function maxKilobytes(): int
+    {
+        /** @var ShopDevice|null $device */
+        $device = $this->user();
+        $keepsOriginals = $device?->shop?->keepsOriginalPictures() ?? true;
+
+        return (int) config($keepsOriginals ? 'jocko.files.max_original_kilobytes' : 'jocko.files.max_kilobytes');
     }
 
     /**

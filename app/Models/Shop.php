@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'slug', 'owner_name', 'email', 'phone', 'address', 'timezone', 'status', 'notes', 'plan_id', 'paid_until'])]
+#[Fillable(['name', 'slug', 'owner_name', 'email', 'phone', 'address', 'timezone', 'status', 'notes', 'plan_id', 'paid_until', 'keep_original_pictures'])]
 class Shop extends Model
 {
     /** @use HasFactory<ShopFactory> */
@@ -29,6 +29,7 @@ class Shop extends Model
             'status' => ShopStatus::class,
             'restore_allowed_until' => 'datetime',
             'paid_until' => 'date',
+            'keep_original_pictures' => 'boolean',
         ];
     }
 
@@ -38,6 +39,14 @@ class Shop extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * Whether this shop sends the original of each picture instead of a small preview.
+     */
+    public function keepsOriginalPictures(): bool
+    {
+        return (bool) $this->getAttribute('keep_original_pictures');
     }
 
     public function paidUntil(): ?CarbonInterface

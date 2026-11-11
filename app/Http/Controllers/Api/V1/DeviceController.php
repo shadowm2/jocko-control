@@ -31,6 +31,8 @@ class DeviceController extends Controller
             'received_at' => $device->last_seen_at->toIso8601String(),
             'last_sync_at' => $device->last_sync_at?->toIso8601String(),
             'pending_commands' => $this->commands->pendingCount($device),
+            // What to upload for a picture: its original or a small preview.
+            'pictures' => ($device->shop?->keepsOriginalPictures() ?? true) ? 'original' : 'preview',
         ]]);
     }
 
