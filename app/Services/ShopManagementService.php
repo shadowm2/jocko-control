@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 
 class ShopManagementService
 {
+    /** How long the shop's device may read its data back once an administrator allows it. */
+    private const RESTORE_WINDOW_HOURS = 24;
+
     public function __construct(private readonly AuditLogger $audit) {}
 
     /**
@@ -52,6 +55,18 @@ class ShopManagementService
     public function reactivate(Shop $shop, User $admin): Shop
     {
         return $this->changeStatus($shop, ShopStatus::Active, AuditAction::ShopReactivated, $admin);
+    }
+
+    /**
+     * Open a window in which this shop's device may read its mirrored data
+     * back to rebuild a lost installation.
+     */
+    public function allowRestore(Shop $shop, User $admin): Shop
+    {
+        $shop->forceFill(['restore_allowed_until' => now()->addHours(self::RESTORE_WINDOW_HOURS)])->save();
+        $this->audit->record(AuditAction::ShopRestoreAllowed, $admin, $shop, metadata: ['hours' => self::RESTORE_WINDOW_HOURS]);
+
+        return $shop;
     }
 
     private function changeStatus(Shop $shop, ShopStatus $status, AuditAction $action, User $admin): Shop

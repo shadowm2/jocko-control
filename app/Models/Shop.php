@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ShopStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\ShopFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,6 +25,7 @@ class Shop extends Model
     {
         return [
             'status' => ShopStatus::class,
+            'restore_allowed_until' => 'datetime',
         ];
     }
 
@@ -57,6 +59,22 @@ class Shop extends Model
     public function auditLogs(): HasMany
     {
         return $this->hasMany(AuditLog::class);
+    }
+
+    /**
+     * Whether an administrator has opened the window in which the shop's device
+     * may read its data back.
+     */
+    public function restoreAllowed(): bool
+    {
+        return $this->restoreAllowedUntil()?->isFuture() ?? false;
+    }
+
+    public function restoreAllowedUntil(): ?CarbonInterface
+    {
+        $until = $this->getAttribute('restore_allowed_until');
+
+        return $until instanceof CarbonInterface ? $until : null;
     }
 
     public function isActive(): bool

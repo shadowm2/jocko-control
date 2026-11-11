@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\RemoteCommandController;
+use App\Http\Controllers\Api\V1\RestoreController;
 use App\Http\Controllers\Api\V1\SyncEventController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,9 @@ Route::prefix('v1')
     ->group(function (): void {
         Route::get('device/me', [DeviceController::class, 'me'])->name('api.v1.device.me');
         Route::post('device/heartbeat', [DeviceController::class, 'heartbeat'])->name('api.v1.device.heartbeat');
+
+        Route::get('restore', [RestoreController::class, 'summary'])->name('api.v1.restore.summary');
+        Route::get('restore/{entity}', [RestoreController::class, 'records'])->where('entity', '[a-z_]+')->name('api.v1.restore.records');
 
         Route::post('sync/events', [SyncEventController::class, 'store'])->name('api.v1.sync.events');
 

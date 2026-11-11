@@ -183,6 +183,18 @@ class ShopManagementTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'shop.reactivated', 'shop_id' => $shop->id]);
     }
 
+    public function test_an_administrator_can_allow_a_shop_to_restore_its_data(): void
+    {
+        $shop = Shop::factory()->create();
+
+        Livewire::test(Show::class, ['shop' => $shop])
+            ->assertSee(__('ui.shops.allow_restore'))
+            ->call('allowRestore');
+
+        $this->assertTrue($shop->fresh()->restoreAllowed());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'shop.restore_allowed', 'shop_id' => $shop->id, 'user_id' => $this->admin->id]);
+    }
+
     public function test_suspending_twice_writes_one_audit_entry(): void
     {
         $shop = Shop::factory()->create();
