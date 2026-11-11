@@ -20,7 +20,7 @@ class ShopDataExport
 
     public function download(Shop $shop, string $entity, string $search, string $scope): StreamedResponse
     {
-        $fields = array_keys($this->catalog->fields($entity));
+        $fields = array_keys($this->catalog->visibleFields($entity));
         $name = sprintf('%s-%s-%s.csv', $shop->slug, $entity, now()->format('Y-m-d'));
 
         return response()->streamDownload(function () use ($shop, $entity, $search, $scope, $fields): void {

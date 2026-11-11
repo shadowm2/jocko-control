@@ -11,7 +11,7 @@ final class EntityStyle
 {
     private const ICONS = [
         'order' => 'shopping-bag', 'order_item' => 'queue-list', 'payment' => 'banknotes', 'cash_close' => 'calculator',
-        'user' => 'user', 'user_car' => 'key', 'car_company' => 'building-office', 'car' => 'truck', 'color' => 'swatch',
+        'user' => 'user', 'role' => 'shield-check', 'user_car' => 'key', 'car_company' => 'building-office', 'car' => 'truck', 'color' => 'swatch',
         'item' => 'cube', 'item_brand' => 'tag', 'brand' => 'bookmark', 'category' => 'squares-2x2', 'unit_group' => 'scale', 'unit' => 'hashtag',
         'warehouse' => 'building-storefront', 'warehouse_item' => 'archive-box', 'stock_movement' => 'arrows-right-left', 'media' => 'photo',
         'supplier' => 'user-group', 'purchase' => 'shopping-cart', 'purchase_item' => 'list-bullet',

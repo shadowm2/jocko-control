@@ -8,8 +8,10 @@
 | The read-only copy of a local installation's business data. Each entity is
 | one table of jocko-shop. The `fields` list is an allowlist: a field a shop
 | sends that is not listed here is dropped when the event is projected, so a
-| secret (password, OTP, token, setting) can never be stored even if a shop
-| sent it by mistake. Never add credentials here.
+| secret (OTP, token, setting) can never be stored even if a shop sent it by
+| mistake. The one credential kept on purpose is a user's password hash, typed
+| `secret`: kept so a lost shop can be rebuilt, never shown, listed or exported.
+| Never add anything else of the kind.
 |
 | Field types: int, string, text, decimal, bool, date, datetime, enum, or
 | ref:<entity> for a foreign key to another entity of the same shop.
@@ -104,7 +106,7 @@ return [
         'user' => [
             'group' => 'people',
             'label' => ['first_name', 'last_name'],
-            'columns' => ['type', 'mobile', 'email'],
+            'columns' => ['type', 'mobile', 'email', 'roles'],
             'fields' => [
                 'slug' => 'string',
                 'type' => 'enum',
@@ -112,8 +114,24 @@ return [
                 'last_name' => 'string',
                 'email' => 'string',
                 'mobile' => 'string',
+                // The password HASH, kept only so a lost shop can be restored. Never shown or exported.
+                'password' => 'secret',
+                // The staff member's role names, comma separated.
+                'roles' => 'string',
             ],
             'children' => ['user_car' => 'user_id', 'order' => 'user_id'],
+        ],
+
+        'role' => [
+            'group' => 'people',
+            'label' => ['name'],
+            'columns' => ['permissions'],
+            'fields' => [
+                'name' => 'string',
+                'guard_name' => 'string',
+                // The permissions the role holds, comma separated.
+                'permissions' => 'text',
+            ],
         ],
 
         'user_car' => [
