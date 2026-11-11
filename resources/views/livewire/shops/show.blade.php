@@ -12,6 +12,10 @@
         <div class="flex flex-wrap gap-2">
             <flux:button icon="pencil-square" :href="route('shops.edit', $shop)" wire:navigate>{{ __('ui.common.edit') }}</flux:button>
 
+            <flux:modal.trigger name="allow-restore">
+                <flux:button icon="arrow-path">{{ __('ui.shops.allow_restore') }}</flux:button>
+            </flux:modal.trigger>
+
             @if ($shop->isActive())
                 <flux:modal.trigger name="suspend-shop">
                     <flux:button variant="danger" icon="pause-circle">{{ __('ui.shops.suspend') }}</flux:button>
@@ -108,6 +112,22 @@
             <flux:text class="py-4 text-center text-zinc-500">{{ __('ui.shops.no_audit') }}</flux:text>
         @endforelse
     </flux:card>
+
+    <flux:modal name="allow-restore" class="md:w-[28rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('ui.shops.allow_restore_title') }}</flux:heading>
+                <flux:text class="mt-2">{{ __('ui.shops.allow_restore_body') }}</flux:text>
+                @if ($shop->restoreAllowed())
+                    <flux:text class="mt-2 font-medium">{{ __('ui.shops.restore_open_until', ['time' => $shop->restoreAllowedUntil()?->timezone(config('app.timezone'))->format('Y-m-d H:i')]) }}</flux:text>
+                @endif
+            </div>
+            <div class="flex justify-end gap-2">
+                <flux:modal.close><flux:button variant="ghost">{{ __('ui.common.cancel') }}</flux:button></flux:modal.close>
+                <flux:button variant="primary" wire:click="allowRestore" wire:loading.attr="disabled" wire:target="allowRestore">{{ __('ui.shops.allow_restore') }}</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 
     <flux:modal name="suspend-shop" class="md:w-[28rem]">
         <div class="space-y-6">

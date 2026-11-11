@@ -70,6 +70,18 @@ class Show extends Component
         $this->dispatch('shop-status-changed');
     }
 
+    public function allowRestore(ShopManagementService $shops): void
+    {
+        $admin = auth()->user();
+        abort_if($admin === null, 403);
+
+        $shops->allowRestore($this->shop(), $admin);
+
+        unset($this->shop);
+        Flux::modal('allow-restore')->close();
+        Flux::toast(text: __('ui.shops.restore_allowed_done'), variant: 'success');
+    }
+
     public function render(): View
     {
         $shop = $this->shop;
