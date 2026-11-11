@@ -75,7 +75,7 @@ class Show extends Component
         return view('livewire.shops.data.show', [
             'shop' => Shop::query()->findOrFail($this->shopId),
             'record' => $record,
-            'fields' => array_keys($catalog->fields($this->entity)),
+            'fields' => array_keys($catalog->visibleFields($this->entity)),
             'references' => $references->resolve($this->shopId, $this->entity, [$record]),
             'children' => $children,
             'pictures' => $this->entity === 'media'

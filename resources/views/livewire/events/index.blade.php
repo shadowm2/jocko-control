@@ -67,7 +67,7 @@
 
     <flux:modal name="event-payload" class="md:w-[40rem]">
         @if ($viewing)
-            @php $json = Format::json($viewing->payload); @endphp
+            @php $json = Format::json(app(\App\Services\ShopDataCatalog::class)->redact((string) $viewing->aggregate_type, (array) $viewing->payload)); @endphp
             <div class="space-y-4">
                 <flux:heading size="lg"><x-event-type :type="$viewing->event_type" /></flux:heading>
                 <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">

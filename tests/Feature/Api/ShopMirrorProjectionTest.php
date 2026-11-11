@@ -123,7 +123,7 @@ class ShopMirrorProjectionTest extends TestCase
         $this->assertTrue(ShopRecord::sole()->isRemoved());
     }
 
-    public function test_only_allowlisted_plain_fields_are_stored_so_secrets_never_reach_the_mirror(): void
+    public function test_only_allowlisted_plain_fields_are_stored_and_the_only_secret_kept_is_the_password_hash(): void
     {
         $issued = $this->issueDevice();
         $event = $this->recordEvent('user', 'created', [
@@ -142,8 +142,13 @@ class ShopMirrorProjectionTest extends TestCase
 
         $record = ShopRecord::sole();
         $this->assertSame('Ali Rezaei', $record->label);
-        $this->assertEqualsCanonicalizing(['id', 'first_name', 'last_name', 'mobile'], array_keys($record->data));
-        $this->assertStringNotContainsString('hashhash', json_encode($record->getAttributes()));
+        // The password hash is kept on purpose (to restore a lost shop); OTPs, tokens and 2FA secrets never are.
+        $this->assertEqualsCanonicalizing(['id', 'first_name', 'last_name', 'mobile', 'password'], array_keys($record->data));
+        $this->assertSame('$2y$12$hashhashhashhashhashhash', $record->data['password']);
+        $encoded = json_encode($record->getAttributes());
+        foreach (['123456', 'remember-me', 'JBSWY3DPEHPK3PXP'] as $secret) {
+            $this->assertStringNotContainsString($secret, $encoded);
+        }
     }
 
     public function test_the_same_local_id_in_two_shops_stays_two_records(): void

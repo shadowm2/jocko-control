@@ -59,6 +59,38 @@ class ShopDataCatalog
     }
 
     /**
+     * The fields that may be shown or exported. A `secret` field (a password
+     * hash) is kept so a lost shop can be restored, and goes no further.
+     *
+     * @return array<string, string> field => type
+     */
+    public function visibleFields(string $entity): array
+    {
+        return array_filter($this->fields($entity), fn (string $type): bool => $type !== 'secret');
+    }
+
+    /**
+     * An event payload with every secret field blanked, for showing it.
+     *
+     * @param  array<array-key, mixed>  $payload
+     * @return array<array-key, mixed>
+     */
+    public function redact(string $entity, array $payload): array
+    {
+        if (! $this->has($entity)) {
+            return $payload;
+        }
+
+        foreach ($this->fields($entity) as $field => $type) {
+            if ($type === 'secret' && array_key_exists($field, $payload)) {
+                $payload[$field] = '••••••••';
+            }
+        }
+
+        return $payload;
+    }
+
+    /**
      * @return list<string>
      */
     public function columns(string $entity): array
