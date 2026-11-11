@@ -39,14 +39,17 @@
             <flux:heading size="lg" class="mb-4">{{ __('ui.shop_data.pictures') }}</flux:heading>
             <div class="flex flex-wrap gap-4">
                 @foreach ($pictures as $mediaId)
-                    <a href="{{ route('shops.files.show', [$shop, $mediaId]) }}" target="_blank" rel="noopener">
-                        <img src="{{ route('shops.files.show', [$shop, $mediaId]) }}" alt="" loading="lazy" class="max-h-48 max-w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700">
-                    </a>
+                    <figure class="max-w-xs">
+                        <a href="{{ route('shops.files.show', [$shop, $mediaId]) }}" target="_blank" rel="noopener">
+                            <img src="{{ route('shops.files.show', [$shop, $mediaId]) }}" alt="" loading="lazy" class="max-h-48 max-w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700">
+                        </a>
+                        {{-- Said per picture: a shop that keeps originals can still hold a few previews. --}}
+                        @if (in_array($mediaId, $previewPictures, true))
+                            <figcaption class="mt-1 text-xs text-zinc-500" data-preview-note>{{ __('ui.shop_data.pictures_hint') }}</figcaption>
+                        @endif
+                    </figure>
                 @endforeach
             </div>
-            @unless ($shop->keepsOriginalPictures())
-                <flux:text size="sm" class="mt-3 text-zinc-500">{{ __('ui.shop_data.pictures_hint') }}</flux:text>
-            @endunless
         </flux:card>
     @endif
 

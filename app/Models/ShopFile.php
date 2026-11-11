@@ -12,11 +12,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * The preview image a shop sent for one of its `media` records. `media_id` is
  * the shop's own id; the bytes live on the private disk at `path`.
  */
-#[Fillable(['shop_id', 'media_id', 'sha256', 'mime_type', 'size', 'path'])]
+#[Fillable(['shop_id', 'media_id', 'kind', 'sha256', 'mime_type', 'size', 'path'])]
 class ShopFile extends Model
 {
     /** @use HasFactory<ShopFileFactory> */
     use HasFactory;
+
+    public const ORIGINAL = 'original';
+
+    public const PREVIEW = 'preview';
+
+    public function isPreview(): bool
+    {
+        return $this->kind !== self::ORIGINAL;
+    }
 
     /**
      * @return array<string, string>

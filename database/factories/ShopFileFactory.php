@@ -21,6 +21,7 @@ class ShopFileFactory extends Factory
         return [
             'shop_id' => Shop::factory(),
             'media_id' => fake()->unique()->numberBetween(1, 1_000_000),
+            'kind' => 'preview',
             'sha256' => $sha,
             'mime_type' => 'image/jpeg',
             'size' => 1024,
