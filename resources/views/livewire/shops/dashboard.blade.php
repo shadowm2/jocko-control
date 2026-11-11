@@ -225,6 +225,35 @@
             @endforelse
         </flux:card>
 
+        <flux:card class="space-y-3" data-debt-aging>
+            <div class="flex items-center justify-between">
+                <flux:heading>
+                    {{ __('ui.shop_dashboard.debts') }}
+                    <flux:text size="sm" class="font-normal">{{ __('ui.shop_dashboard.debts_total', ['total' => Format::number($debtTotal)]) }}</flux:text>
+                </flux:heading>
+            </div>
+
+            @if ($debtTotal > 0)
+                @foreach ($debtAging as $bracket => $amount)
+                    @php($limits = \App\Services\ShopDashboardMetrics::AGING_DAYS)
+                    <div class="flex items-center justify-between gap-3 px-2 py-1" data-debt-bracket="{{ $bracket }}" data-amount="{{ $amount }}">
+                        <flux:text>
+                            @if ($bracket === 0)
+                                {{ __('ui.shop_dashboard.debt_up_to', ['days' => Format::number($limits[0])]) }}
+                            @elseif ($bracket < count($limits))
+                                {{ __('ui.shop_dashboard.debt_between', ['from' => Format::number($limits[$bracket - 1]), 'to' => Format::number($limits[$bracket])]) }}
+                            @else
+                                {{ __('ui.shop_dashboard.debt_over', ['days' => Format::number($limits[$bracket - 1])]) }}
+                            @endif
+                        </flux:text>
+                        <span @class(['text-sm font-medium tabular-nums', 'text-red-600 dark:text-red-400' => $bracket === count($limits) && $amount > 0])>{{ Format::number($amount) }}</span>
+                    </div>
+                @endforeach
+            @else
+                <flux:text class="py-8 text-center">{{ __('ui.shop_dashboard.no_debts') }}</flux:text>
+            @endif
+        </flux:card>
+
         <flux:card class="space-y-3" data-cash-differences>
             <div class="flex items-center justify-between">
                 <flux:heading>

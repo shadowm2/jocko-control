@@ -197,6 +197,112 @@ class ShopDashboardTest extends TestCase
             ->assertSee('+'.Format::number(5000.0));
     }
 
+    /**
+     * An order owed by a customer: billed in one line, paid in one (if at all).
+     */
+    private function debt(int $id, int $daysAgo, string $billed, ?string $paid = null, string $status = 'pending', int $owner = 1, string $method = 'cash', string $chequeStatus = 'cleared'): void
+    {
+        $at = now()->utc()->subDays($daysAgo)->format('Y-m-d\\TH:i:s.u\\Z');
+
+        $this->mirror($this->shop, 'order', $id, ['order_number' => "D-{$id}", 'status' => $status, 'user_id' => $owner, 'created_at' => $at], "D-{$id}");
+        $this->mirror($this->shop, 'order_item', $id * 10, ['order_id' => $id, 'total' => $billed]);
+
+        if ($paid !== null) {
+            $this->mirror($this->shop, 'payment', $id * 10, ['order_id' => $id, 'amount' => $paid, 'method' => $method, 'cheque_status' => $chequeStatus]);
+        }
+    }
+
+    private function customers(): void
+    {
+        $this->mirror($this->shop, 'user', 1, ['type' => 'customer', 'first_name' => 'Ali'], 'Ali');
+        $this->mirror($this->shop, 'user', 2, ['type' => 'supplier', 'first_name' => 'Sara'], 'Sara');
+    }
+
+    public function test_debts_are_aged_into_brackets_with_the_edges_belonging_to_the_younger_one(): void
+    {
+        $this->customers();
+        $this->debt(1, 0, '100.0000');
+        $this->debt(2, 30, '200.0000');
+        $this->debt(3, 31, '400.0000');
+        $this->debt(4, 60, '800.0000');
+        $this->debt(5, 61, '1600.0000');
+        $this->debt(6, 90, '3200.0000');
+        $this->debt(7, 91, '6400.0000');
+
+        $metrics = app(ShopDashboardMetrics::class)->for($this->shop);
+
+        $this->assertSame([300.0, 1200.0, 4800.0, 6400.0], $metrics['debtAging']);
+        $this->assertSame(12700.0, $metrics['debtTotal']);
+    }
+
+    public function test_only_the_unpaid_part_counts_and_settled_orders_do_not(): void
+    {
+        $this->customers();
+        $this->debt(1, 45, '1000.0000', '250.0000');
+        $this->debt(2, 45, '500.0000', '500.0000');
+        $this->debt(3, 45, '500.0000', '700.0000');
+
+        $metrics = app(ShopDashboardMetrics::class)->for($this->shop);
+
+        $this->assertSame([0.0, 750.0, 0.0, 0.0], $metrics['debtAging']);
+    }
+
+    public function test_a_bounced_cheque_pays_nothing_but_a_pending_one_does(): void
+    {
+        $this->customers();
+        $this->debt(1, 5, '1000.0000', '400.0000', method: 'cheque', chequeStatus: 'bounced');
+        $this->debt(2, 5, '1000.0000', '400.0000', method: 'cheque', chequeStatus: 'pending');
+
+        $metrics = app(ShopDashboardMetrics::class)->for($this->shop);
+
+        $this->assertSame([1600.0, 0.0, 0.0, 0.0], $metrics['debtAging']);
+    }
+
+    public function test_cancelled_removed_and_non_customer_orders_are_not_debts(): void
+    {
+        $this->customers();
+        $this->debt(1, 5, '100.0000', status: 'cancelled');
+        $this->debt(2, 5, '200.0000', owner: 2);
+        $this->mirror($this->shop, 'order', 3, ['order_number' => 'D-3', 'status' => 'pending', 'user_id' => 1, 'created_at' => now()->utc()->format('Y-m-d\\TH:i:s.u\\Z')], 'D-3', removed: true);
+        $this->mirror($this->shop, 'order_item', 30, ['order_id' => 3, 'total' => '999.0000']);
+        $this->debt(4, 5, '50.0000');
+        $this->mirror($this->shop, 'order_item', 41, ['order_id' => 4, 'total' => '777.0000'], removed: true);
+
+        $metrics = app(ShopDashboardMetrics::class)->for($this->shop);
+
+        $this->assertSame(50.0, $metrics['debtTotal']);
+    }
+
+    public function test_the_debt_card_shows_each_bracket_or_says_nobody_owes(): void
+    {
+        $this->customers();
+        $this->mirror($this->shop, 'item', 1, ['name' => 'Brake pad'], 'Brake pad');
+
+        Livewire::test(Dashboard::class, ['shop' => $this->shop])
+            ->assertSeeHtml('data-debt-aging')
+            ->assertSee(__('ui.shop_dashboard.no_debts'))
+            ->assertDontSeeHtml('data-debt-bracket');
+
+        $this->debt(1, 100, '1000.0000');
+
+        Livewire::test(Dashboard::class, ['shop' => $this->shop])
+            ->assertDontSee(__('ui.shop_dashboard.no_debts'))
+            ->assertSeeHtml('data-debt-bracket="3" data-amount="1000"')
+            ->assertSeeHtml('data-debt-bracket="0" data-amount="0"')
+            ->assertSee(__('ui.shop_dashboard.debt_over', ['days' => Format::number(90)]));
+    }
+
+    public function test_another_shops_debts_never_leak_in(): void
+    {
+        $this->customers();
+        $other = Shop::factory()->create(['timezone' => 'Asia/Tehran']);
+        $this->mirror($other, 'user', 1, ['type' => 'customer'], 'Zed');
+        $this->mirror($other, 'order', 1, ['order_number' => 'X-1', 'status' => 'pending', 'user_id' => 1, 'created_at' => now()->utc()->format('Y-m-d\\TH:i:s.u\\Z')], 'X-1');
+        $this->mirror($other, 'order_item', 1, ['order_id' => 1, 'total' => '5000.0000']);
+
+        $this->assertSame(0.0, app(ShopDashboardMetrics::class)->for($this->shop)['debtTotal']);
+    }
+
     public function test_recent_orders_come_newest_first_with_customer_car_and_total(): void
     {
         $this->seedShop($this->shop);
