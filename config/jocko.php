@@ -126,6 +126,8 @@ return [
 
     'files' => [
         'max_kilobytes' => 2048,
+        // For a shop that keeps originals. Stays under max_request_bytes.
+        'max_original_kilobytes' => 7168,
     ],
 
     /*

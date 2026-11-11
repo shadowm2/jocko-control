@@ -33,6 +33,7 @@ class DeviceResource extends JsonResource
                 'command_poll_interval_seconds' => config('jocko.api.command_poll_interval_seconds'),
                 'max_events_per_batch' => config('jocko.sync.max_events_per_batch'),
                 'max_event_payload_bytes' => config('jocko.sync.max_payload_bytes'),
+                'pictures' => ($this->shop?->keepsOriginalPictures() ?? true) ? 'original' : 'preview',
             ],
             'server_time' => now()->toIso8601String(),
         ];

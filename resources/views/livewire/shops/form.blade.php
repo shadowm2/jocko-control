@@ -68,6 +68,13 @@
                 </flux:field>
             </div>
 
+            <flux:field variant="inline">
+                <flux:switch wire:model="keep_original_pictures" />
+                <flux:label>{{ __('ui.shops.keep_original_pictures') }}</flux:label>
+                <flux:description>{{ __('ui.shops.keep_original_pictures_help') }}</flux:description>
+                <flux:error name="keep_original_pictures" />
+            </flux:field>
+
             <flux:field>
                 <flux:label>{{ __('ui.shops.address') }}</flux:label>
                 <flux:textarea wire:model="address" rows="2" />

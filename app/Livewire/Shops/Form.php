@@ -39,6 +39,8 @@ class Form extends Component
 
     public string $paid_until = '';
 
+    public bool $keep_original_pictures = true;
+
     public function mount(?Shop $shop = null): void
     {
         if ($shop?->exists) {
@@ -51,6 +53,7 @@ class Form extends Component
             $this->notes = (string) $shop->notes;
             $this->plan_id = (string) $shop->plan_id;
             $this->paid_until = $shop->paidUntil()?->format('Y-m-d') ?? '';
+            $this->keep_original_pictures = $shop->keepsOriginalPictures();
         }
     }
 
@@ -77,6 +80,7 @@ class Form extends Component
             'notes' => ['nullable', 'string', 'max:5000'],
             'plan_id' => ['nullable', 'integer', Rule::exists('plans', 'id')],
             'paid_until' => ['nullable', 'date'],
+            'keep_original_pictures' => ['boolean'],
         ];
     }
 

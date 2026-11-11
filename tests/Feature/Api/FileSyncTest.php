@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Livewire\Shops\Form;
 use App\Models\Shop;
 use App\Models\ShopFile;
 use App\Models\ShopRecord;
@@ -9,6 +10,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
 use Tests\Concerns\BuildsShopMirror;
 use Tests\Concerns\CreatesDevices;
 use Tests\TestCase;
@@ -105,7 +107,7 @@ class FileSyncTest extends TestCase
 
     public function test_only_small_images_are_accepted(): void
     {
-        $issued = $this->issueDevice();
+        $issued = $this->issueDevice(Shop::factory()->create(['keep_original_pictures' => false]));
 
         // Real files, because the check reads the content, not the name: a script or an SVG with a picture's name.
         $disguised = fn (string $name, string $content): UploadedFile => new UploadedFile(
@@ -227,5 +229,68 @@ class FileSyncTest extends TestCase
             ->assertOk()
             ->assertSee(route('shops.files.show', [$shop, 12]), false)
             ->assertDontSee(route('shops.files.show', [$shop, 14]), false);
+    }
+
+    /**
+     * @return array{file: UploadedFile, sha256: string}
+     */
+    private function bigImage(int $kilobytes): array
+    {
+        $file = UploadedFile::fake()->image('big.jpg', 60, 60)->size($kilobytes);
+
+        return ['file' => $file, 'sha256' => hash_file('sha256', $file->getRealPath())];
+    }
+
+    public function test_a_shop_that_keeps_originals_may_send_a_large_file(): void
+    {
+        $issued = $this->issueDevice(Shop::factory()->create(['keep_original_pictures' => true]));
+
+        $this->post('/api/v1/sync/files', ['media_id' => 5] + $this->bigImage(5000), $this->bearer($issued))->assertCreated();
+    }
+
+    public function test_a_shop_on_previews_is_still_held_to_the_preview_size(): void
+    {
+        $issued = $this->issueDevice(Shop::factory()->create(['keep_original_pictures' => false]));
+
+        $this->post('/api/v1/sync/files', ['media_id' => 5] + $this->bigImage(5000), $this->bearer($issued))->assertStatus(422);
+    }
+
+    public function test_even_an_original_has_an_upper_limit(): void
+    {
+        $issued = $this->issueDevice(Shop::factory()->create(['keep_original_pictures' => true]));
+
+        $this->post('/api/v1/sync/files', ['media_id' => 5] + $this->bigImage(8000), $this->bearer($issued))->assertStatus(422);
+    }
+
+    public function test_the_device_is_told_whether_to_send_originals_or_previews(): void
+    {
+        $original = $this->issueDevice(Shop::factory()->create(['keep_original_pictures' => true]));
+        $preview = $this->issueDevice(Shop::factory()->create(['keep_original_pictures' => false]));
+
+        // Sanctum remembers the first device within one test: start each call fresh.
+        $call = function (string $method, string $uri, $issued) {
+            $this->app['auth']->forgetGuards();
+
+            return $method === 'getJson' ? $this->getJson($uri, $this->bearer($issued)) : $this->postJson($uri, [], $this->bearer($issued));
+        };
+
+        $call('postJson', '/api/v1/device/heartbeat', $original)->assertOk()->assertJsonPath('data.pictures', 'original');
+        $call('postJson', '/api/v1/device/heartbeat', $preview)->assertOk()->assertJsonPath('data.pictures', 'preview');
+        $call('getJson', '/api/v1/device/me', $original)->assertJsonPath('data.config.pictures', 'original');
+        $call('getJson', '/api/v1/device/me', $preview)->assertJsonPath('data.config.pictures', 'preview');
+    }
+
+    public function test_an_administrator_flips_the_switch_on_the_shop_form(): void
+    {
+        $shop = Shop::factory()->create(['keep_original_pictures' => true]);
+
+        $this->asAdmin();
+        Livewire::test(Form::class, ['shop' => $shop])
+            ->assertSet('keep_original_pictures', true)
+            ->set('keep_original_pictures', false)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertFalse($shop->fresh()->keepsOriginalPictures());
     }
 }
