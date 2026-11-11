@@ -44,7 +44,9 @@
                     </a>
                 @endforeach
             </div>
-            <flux:text size="sm" class="mt-3 text-zinc-500">{{ __('ui.shop_data.pictures_hint') }}</flux:text>
+            @unless ($shop->keepsOriginalPictures())
+                <flux:text size="sm" class="mt-3 text-zinc-500">{{ __('ui.shop_data.pictures_hint') }}</flux:text>
+            @endunless
         </flux:card>
     @endif
 
