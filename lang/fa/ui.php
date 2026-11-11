@@ -201,6 +201,7 @@ return [
         'pictures' => 'تصاویر',
         'pictures_original' => 'اصل تصویر',
         'pictures_preview' => 'فقط پیش‌نمایش',
+        'open_record' => 'باز کردن رکورد',
         'recent_commands' => 'دستورهای اخیر',
         'audit_history' => 'تاریخچهٔ ممیزی',
         'no_events' => 'هنوز رویدادی از این فروشگاه دریافت نشده است.',

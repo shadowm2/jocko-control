@@ -125,6 +125,9 @@
                         :type="$event->event_type"
                     />
                     <span class="text-zinc-500">· {{ $event->device?->name }}</span>
+                    @if ($record = $eventRecords->get($event->aggregate_id))
+                        <flux:link :href="route('shops.data.show', ['shop' => $shop, 'entity' => $record->entity, 'record' => $record])" wire:navigate class="ms-2 text-xs">{{ __('ui.shops.open_record') }}</flux:link>
+                    @endif
                 </div>
                 <x-datetime :value="$event->received_at" ago class="text-xs text-zinc-500" />
             </div>

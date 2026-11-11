@@ -201,6 +201,7 @@ return [
         'pictures' => 'Pictures',
         'pictures_original' => 'Originals',
         'pictures_preview' => 'Previews only',
+        'open_record' => 'Open record',
         'recent_commands' => 'Recent commands',
         'audit_history' => 'Audit history',
         'no_events' => 'No event has been received from this shop yet.',

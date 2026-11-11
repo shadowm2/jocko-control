@@ -8,7 +8,9 @@ use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Livewire\Concerns\RefreshesLive;
 use App\Models\AuditLog;
 use App\Models\Shop;
+use App\Models\ShopRecord;
 use App\Models\SyncEvent;
+use App\Services\ShopDataCatalog;
 use App\Services\ShopManagementService;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
@@ -83,22 +85,33 @@ class Show extends Component
         Flux::toast(text: __('ui.shops.restore_allowed_done'), variant: 'success');
     }
 
-    public function render(): View
+    public function render(ShopDataCatalog $catalog): View
     {
         $shop = $this->shop;
 
         $lastSyncAt = $shop->devices()->max('last_sync_at');
 
+        $events = SyncEvent::query()
+            ->where('shop_id', $shop->getKey())
+            ->with('device:id,name')
+            ->orderByDesc('received_at')->orderByDesc('id')
+            ->limit(10)
+            ->get();
+
+        // The mirrored record each event is about, when there is one to open.
+        $records = ShopRecord::query()
+            ->forShop($shop)
+            ->whereIn('aggregate_id', $events->pluck('aggregate_id'))
+            ->get(['id', 'entity', 'aggregate_id'])
+            ->filter(fn (ShopRecord $record): bool => $catalog->has($record->entity))
+            ->keyBy('aggregate_id');
+
         return view('livewire.shops.show', [
             'shop' => $shop->loadMissing('plan'),
             'activeDevices' => $shop->devices()->where('status', DeviceStatus::Active->value)->count(),
             'lastSyncAt' => $lastSyncAt ? Carbon::parse($lastSyncAt, 'UTC') : null,
-            'events' => SyncEvent::query()
-                ->where('shop_id', $shop->getKey())
-                ->with('device:id,name')
-                ->orderByDesc('received_at')->orderByDesc('id')
-                ->limit(10)
-                ->get(),
+            'events' => $events,
+            'eventRecords' => $records,
             'audit' => AuditLog::query()
                 ->where('shop_id', $shop->getKey())
                 ->with(['user:id,name', 'device:id,name'])
