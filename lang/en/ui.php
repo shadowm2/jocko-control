@@ -196,6 +196,7 @@ return [
         'last_sync' => 'Last successful sync',
         'registered_at' => 'Registered',
         'recent_events' => 'Recent sync events',
+        'open_record' => 'Open record',
         'recent_commands' => 'Recent commands',
         'audit_history' => 'Audit history',
         'no_events' => 'No event has been received from this shop yet.',
