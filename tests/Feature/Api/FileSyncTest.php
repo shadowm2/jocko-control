@@ -293,4 +293,35 @@ class FileSyncTest extends TestCase
 
         $this->assertFalse($shop->fresh()->keepsOriginalPictures());
     }
+
+    public function test_the_kind_the_shop_says_is_stored_and_defaults_to_preview(): void
+    {
+        $issued = $this->issueDevice();
+
+        $this->post('/api/v1/sync/files', ['media_id' => 1, 'kind' => 'original'] + $this->image('a.jpg'), $this->bearer($issued))->assertCreated();
+        $this->app['auth']->forgetGuards();
+        $this->post('/api/v1/sync/files', ['media_id' => 2, 'kind' => 'preview'] + $this->image('b.jpg', 50), $this->bearer($issued))->assertCreated();
+        $this->app['auth']->forgetGuards();
+        $this->post('/api/v1/sync/files', ['media_id' => 3] + $this->image('c.jpg', 60), $this->bearer($issued))->assertCreated();
+
+        $this->assertSame([1 => 'original', 2 => 'preview', 3 => 'preview'], ShopFile::query()->orderBy('media_id')->pluck('kind', 'media_id')->all());
+    }
+
+    public function test_an_unknown_kind_is_refused(): void
+    {
+        $this->post('/api/v1/sync/files', ['media_id' => 1, 'kind' => 'thumbnail'] + $this->image(), $this->bearer($this->issueDevice()))->assertStatus(422);
+    }
+
+    public function test_the_same_bytes_sent_again_as_another_kind_update_the_kind(): void
+    {
+        $issued = $this->issueDevice();
+        $image = $this->image();
+
+        $this->post('/api/v1/sync/files', ['media_id' => 1, 'kind' => 'preview'] + $image, $this->bearer($issued))->assertCreated();
+        $this->app['auth']->forgetGuards();
+        $this->post('/api/v1/sync/files', ['media_id' => 1, 'kind' => 'original'] + $image, $this->bearer($issued))->assertOk()->assertJsonPath('data.status', 'already_stored');
+
+        $this->assertSame('original', ShopFile::sole()->kind);
+        $this->assertSame(1, ShopFile::query()->count());
+    }
 }

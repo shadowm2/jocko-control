@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreFileRequest;
 use App\Models\ShopDevice;
+use App\Models\ShopFile;
 use App\Services\ShopFileStore;
 use Illuminate\Http\JsonResponse;
 
@@ -23,6 +24,7 @@ class FileController extends Controller
             (int) $request->validated('media_id'),
             (string) $request->validated('sha256'),
             $request->file('file'),
+            (string) ($request->validated('kind') ?? ShopFile::PREVIEW),
         );
 
         return response()->json(['data' => [

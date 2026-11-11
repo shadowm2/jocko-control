@@ -59,6 +59,18 @@ class ShopFileGallery
         return array_values(ShopFile::query()->where('shop_id', $shopId)->whereIn('media_id', $mediaIds)->get()->map(fn (ShopFile $file): int => $file->media_id)->all());
     }
 
+    /**
+     * Which of these pictures are only a downsized preview here, not the original.
+     *
+     * @param  list<int>  $mediaIds
+     * @return list<int>
+     */
+    public function previews(string $shopId, array $mediaIds): array
+    {
+        return ShopFile::query()->where('shop_id', $shopId)->whereIn('media_id', $mediaIds)->where('kind', '!=', ShopFile::ORIGINAL)
+            ->pluck('media_id')->map(fn ($id): int => (int) $id)->values()->all();
+    }
+
     public function has(string $shopId, int $mediaId): bool
     {
         return ShopFile::query()->where('shop_id', $shopId)->where('media_id', $mediaId)->exists();

@@ -22,6 +22,8 @@ class StoreFileRequest extends FormRequest
         return [
             'media_id' => ['required', 'integer', 'min:1', 'max:4294967295'],
             'sha256' => ['required', 'string', 'regex:/^[0-9a-f]{64}$/'],
+            // What the shop sent: the picture itself or a downsized copy. Older shops say nothing: a preview.
+            'kind' => ['nullable', 'string', 'in:original,preview'],
             // A downscaled preview, unless an administrator switched this shop to keep originals.
             'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:'.$this->maxKilobytes()],
         ];

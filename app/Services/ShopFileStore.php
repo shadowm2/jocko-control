@@ -21,11 +21,15 @@ class ShopFileStore
     /**
      * @return array{file: ShopFile, stored: bool} stored is false when the same bytes were already there
      */
-    public function store(string $shopId, int $mediaId, string $sha256, UploadedFile $upload): array
+    public function store(string $shopId, int $mediaId, string $sha256, UploadedFile $upload, string $kind = ShopFile::PREVIEW): array
     {
         $existing = ShopFile::query()->where('shop_id', $shopId)->where('media_id', $mediaId)->first();
 
         if ($existing !== null && $existing->sha256 === $sha256 && Storage::disk(self::DISK)->exists($existing->path)) {
+            if ($existing->kind !== $kind) {
+                $existing->update(['kind' => $kind]);
+            }
+
             return ['file' => $existing, 'stored' => false];
         }
 
@@ -39,7 +43,7 @@ class ShopFileStore
 
         $file = ShopFile::query()->updateOrCreate(
             ['shop_id' => $shopId, 'media_id' => $mediaId],
-            ['sha256' => $sha256, 'mime_type' => $mime, 'size' => $upload->getSize(), 'path' => $path],
+            ['kind' => $kind, 'sha256' => $sha256, 'mime_type' => $mime, 'size' => $upload->getSize(), 'path' => $path],
         );
 
         // The image was replaced: drop the old bytes unless another record shares them.

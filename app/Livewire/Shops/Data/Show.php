@@ -72,15 +72,18 @@ class Show extends Component
             ];
         }
 
+        $pictures = $this->entity === 'media'
+            ? ($gallery->has($this->shopId, $record->local_id) ? [$record->local_id] : [])
+            : ($gallery->forRecords($this->shopId, $this->entity, [$record->local_id])[$record->local_id] ?? []);
+
         return view('livewire.shops.data.show', [
             'shop' => Shop::query()->findOrFail($this->shopId),
             'record' => $record,
             'fields' => array_keys($catalog->visibleFields($this->entity)),
             'references' => $references->resolve($this->shopId, $this->entity, [$record]),
             'children' => $children,
-            'pictures' => $this->entity === 'media'
-                ? ($gallery->has($this->shopId, $record->local_id) ? [$record->local_id] : [])
-                : ($gallery->forRecords($this->shopId, $this->entity, [$record->local_id])[$record->local_id] ?? []),
+            'pictures' => $pictures,
+            'previewPictures' => $gallery->previews($this->shopId, $pictures),
             'summary' => $this->entity === 'order' ? $this->orderSummary($record) : null,
         ])->layout('components.layouts.app', ['title' => $record->label]);
     }
