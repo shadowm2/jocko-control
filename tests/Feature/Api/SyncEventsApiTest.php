@@ -310,7 +310,7 @@ class SyncEventsApiTest extends TestCase
 
         $tables = collect(Schema::getTables(config('database.connections.mysql.database')))
             ->pluck('name')
-            ->reject(fn (string $t) => in_array($t, ['migrations', 'sessions', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'password_reset_tokens', 'users', 'personal_access_tokens', 'shops', 'plans', 'shop_devices', 'sync_events', 'remote_commands', 'audit_logs', 'shop_records', 'shop_files', 'device_backlog_samples'], true));
+            ->reject(fn (string $t) => in_array($t, ['migrations', 'sessions', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'password_reset_tokens', 'users', 'personal_access_tokens', 'shops', 'plans', 'subscription_payments', 'shop_devices', 'sync_events', 'remote_commands', 'audit_logs', 'shop_records', 'shop_files', 'device_backlog_samples'], true));
 
         $this->assertEmpty($tables, 'Unexpected business tables: '.$tables->implode(', '));
         $this->assertDatabaseCount('shop_records', 0);

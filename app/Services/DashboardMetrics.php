@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BillingStatus;
 use App\Enums\CommandStatus;
 use App\Enums\DeviceStatus;
 use App\Enums\ShopStatus;
@@ -56,6 +57,28 @@ class DashboardMetrics
                 ->where('status', CommandStatus::Queued->value)
                 ->where('expires_at', '>', now())
                 ->count(),
+        ];
+    }
+
+    /**
+     * Shops whose plan has run out or runs out within a week, most overdue first.
+     *
+     * @return array{expired: int, due_soon: int, shops: Collection<int, Shop>}
+     */
+    public function billingAttention(int $limit = 10): array
+    {
+        $shops = Shop::query()
+            ->with('plan:id,name')
+            ->whereNotNull('plan_id')
+            ->whereNotNull('paid_until')
+            ->whereDate('paid_until', '<=', now()->addDays(BillingStatus::DUE_SOON_DAYS)->toDateString())
+            ->orderBy('paid_until')
+            ->get();
+
+        return [
+            'expired' => $shops->filter(fn (Shop $shop): bool => $shop->billingStatus() === BillingStatus::Expired)->count(),
+            'due_soon' => $shops->filter(fn (Shop $shop): bool => $shop->billingStatus() === BillingStatus::DueSoon)->count(),
+            'shops' => $shops->take($limit)->values(),
         ];
     }
 

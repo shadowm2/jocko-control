@@ -75,6 +75,14 @@ class Shop extends Model
     }
 
     /**
+     * @return HasMany<SubscriptionPayment, $this>
+     */
+    public function subscriptionPayments(): HasMany
+    {
+        return $this->hasMany(SubscriptionPayment::class);
+    }
+
+    /**
      * @return HasMany<ShopDevice, $this>
      */
     public function devices(): HasMany

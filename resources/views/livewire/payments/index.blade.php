@@ -31,6 +31,54 @@
         @endforeach
     </div>
 
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <flux:card class="space-y-3" data-cheques-due>
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <flux:heading size="lg">{{ __('ui.payments.cheques_due') }}</flux:heading>
+                <div class="flex gap-2">
+                    <flux:badge size="sm">{{ __('ui.payments.cheques_pending', ['count' => Format::number($cheques['count']), 'total' => Format::number($cheques['total'])]) }}</flux:badge>
+                    @if ($cheques['overdue_count'] > 0)
+                        <flux:badge size="sm" color="red" data-overdue-cheques="{{ $cheques['overdue_count'] }}">{{ __('ui.payments.cheques_overdue', ['count' => Format::number($cheques['overdue_count']), 'total' => Format::number($cheques['overdue_total'])]) }}</flux:badge>
+                    @endif
+                </div>
+            </div>
+            @forelse ($cheques['cheques'] as $cheque)
+                <a wire:key="cheque-{{ $cheque['record']->id }}" href="{{ route('shops.data.show', [$cheque['shop'], 'payment', $cheque['record']]) }}" wire:navigate class="flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-zinc-50 dark:hover:bg-white/5" data-cheque>
+                    <div class="min-w-0 text-sm">
+                        <div class="truncate font-medium">{{ $cheque['shop']->name }} <span class="text-zinc-500" dir="ltr">· {{ $cheque['number'] ?? '#'.$cheque['record']->local_id }}{{ $cheque['bank'] ? ' · '.$cheque['bank'] : '' }}</span></div>
+                        <div class="text-zinc-500" dir="ltr">{{ $cheque['due'] ? Format::date($cheque['due']) : __('ui.common.none') }}</div>
+                    </div>
+                    <div class="flex shrink-0 items-center gap-2">
+                        @if ($cheque['overdue'])
+                            <flux:badge size="sm" color="red">{{ __('ui.payments.overdue') }}</flux:badge>
+                        @endif
+                        <span class="tabular-nums">{{ Format::number($cheque['amount']) }}</span>
+                    </div>
+                </a>
+            @empty
+                <flux:text class="py-6 text-center text-zinc-500">{{ __('ui.payments.no_cheques') }}</flux:text>
+            @endforelse
+        </flux:card>
+
+        <flux:card class="space-y-3" data-cash-differences>
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <flux:heading size="lg">{{ __('ui.payments.cash_differences') }}</flux:heading>
+                <flux:badge size="sm" :color="$cash['differences'] > 0 ? 'amber' : 'green'">{{ __('ui.payments.cash_summary', ['off' => Format::number($cash['differences']), 'closes' => Format::number($cash['closes'])]) }}</flux:badge>
+            </div>
+            @forelse ($cash['rows'] as $row)
+                <a wire:key="close-{{ $row['record']->id }}" href="{{ route('shops.data.show', [$row['shop'], 'cash_close', $row['record']]) }}" wire:navigate class="flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-zinc-50 dark:hover:bg-white/5" data-cash-difference>
+                    <div class="min-w-0 text-sm">
+                        <div class="truncate font-medium">{{ $row['shop']->name }}</div>
+                        <div class="text-zinc-500" dir="ltr">{{ Format::date($row['record']->dated_at) }}</div>
+                    </div>
+                    <span class="tabular-nums {{ $row['difference'] < 0 ? 'text-red-600' : 'text-amber-600' }}" dir="ltr">{{ $row['difference'] > 0 ? '+' : '' }}{{ Format::number($row['difference']) }}</span>
+                </a>
+            @empty
+                <flux:text class="py-6 text-center text-zinc-500">{{ $cash['closes'] > 0 ? __('ui.payments.cash_balanced') : __('ui.payments.no_closes') }}</flux:text>
+            @endforelse
+        </flux:card>
+    </div>
+
     <flux:card class="table-card overflow-x-auto p-0!">
         <flux:table>
             <flux:table.columns>

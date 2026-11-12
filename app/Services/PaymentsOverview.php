@@ -86,6 +86,80 @@ class PaymentsOverview
     }
 
     /**
+     * Cheques the shops received that are neither cleared nor bounced, with how
+     * many are past their due date (a calendar date, in each shop's own day).
+     * The list is the most overdue first, cheques with no due date last.
+     *
+     * @return array{count: int, total: float, overdue_count: int, overdue_total: float, cheques: list<array{shop: Shop, record: ShopRecord, number: ?string, bank: ?string, amount: float, due: ?CarbonImmutable, overdue: bool}>}
+     */
+    public function chequesDue(int $limit = 15): array
+    {
+        $rows = ShopRecord::query()
+            ->ofEntity('payment')
+            ->alive()
+            ->where('data->method', 'cheque')
+            ->where('data->cheque_status', 'pending')
+            ->with('shop:id,name,timezone')
+            ->get()
+            ->flatMap(function (ShopRecord $record): array {
+                $shop = $record->shop;
+
+                if ($shop === null) {
+                    return [];
+                }
+
+                $dueOn = $record->field('cheque_due_at');
+                $due = is_string($dueOn) && $dueOn !== '' ? CarbonImmutable::parse(substr($dueOn, 0, 10), 'UTC') : null;
+                $today = CarbonImmutable::now($shop->timezone)->toDateString();
+
+                return [[
+                    'shop' => $shop,
+                    'record' => $record,
+                    'number' => $record->field('cheque_number'),
+                    'bank' => $record->field('cheque_bank'),
+                    'amount' => (float) $record->amount,
+                    'due' => $due,
+                    'overdue' => $due !== null && $due->toDateString() < $today,
+                ]];
+            });
+
+        $overdue = $rows->where('overdue', true);
+
+        return [
+            'count' => $rows->count(),
+            'total' => (float) $rows->sum('amount'),
+            'overdue_count' => $overdue->count(),
+            'overdue_total' => (float) $overdue->sum('amount'),
+            'cheques' => array_values($rows
+                ->sortBy([fn (array $a, array $b): int => ($a['due']?->toDateString() ?? '9999-12-31') <=> ($b['due']?->toDateString() ?? '9999-12-31')])
+                ->take($limit)
+                ->all()),
+        ];
+    }
+
+    /**
+     * The days the tills were closed in the last `$days` days, and those where
+     * the counted cash was not what the day's payments said it should be.
+     *
+     * @return array{closes: int, differences: int, rows: list<array{shop: Shop, record: ShopRecord, difference: float}>}
+     */
+    public function cashDifferences(int $days = 14, int $limit = 15): array
+    {
+        $since = CarbonImmutable::now((string) config('jocko.display_timezone'))->startOfDay()->subDays($days - 1)->toDateString();
+
+        $closes = ShopRecord::query()->ofEntity('cash_close')->alive()->where('dated_at', '>=', $since.' 00:00:00.000');
+        $off = (clone $closes)->whereRaw("cast(json_unquote(json_extract(data, '$.difference')) as decimal(18,4)) != 0");
+
+        return [
+            'closes' => (clone $closes)->count(),
+            'differences' => (clone $off)->count(),
+            'rows' => array_values($off->with('shop:id,name')->orderByDesc('dated_at')->limit($limit)->get()
+                ->flatMap(fn (ShopRecord $record): array => $record->shop === null ? [] : [['shop' => $record->shop, 'record' => $record, 'difference' => (float) $record->field('difference')]])
+                ->all()),
+        ];
+    }
+
+    /**
      * @param  Window  $window
      * @return Collection<int, ShopRecord>
      */
