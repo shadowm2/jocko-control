@@ -13,7 +13,7 @@
             <flux:button icon="pencil-square" :href="route('shops.edit', $shop)" wire:navigate>{{ __('ui.common.edit') }}</flux:button>
 
             <flux:modal.trigger name="allow-restore">
-                <flux:button icon="arrow-path">{{ __('ui.shops.allow_restore') }}</flux:button>
+                <flux:button icon="arrow-path" data-restore-open="{{ $shop->restoreAllowed() ? 'yes' : 'no' }}">{{ $shop->restoreAllowed() ? __('ui.shops.restore_open_button') : __('ui.shops.allow_restore') }}</flux:button>
             </flux:modal.trigger>
 
             @if ($shop->isActive())
@@ -163,7 +163,10 @@
             </div>
             <div class="flex justify-end gap-2">
                 <flux:modal.close><flux:button variant="ghost">{{ __('ui.common.cancel') }}</flux:button></flux:modal.close>
-                <flux:button variant="primary" wire:click="allowRestore" wire:loading.attr="disabled" wire:target="allowRestore">{{ __('ui.shops.allow_restore') }}</flux:button>
+                @if ($shop->restoreAllowed())
+                    <flux:button variant="danger" wire:click="revokeRestore" wire:loading.attr="disabled" wire:target="revokeRestore" data-revoke-restore>{{ __('ui.shops.revoke_restore') }}</flux:button>
+                @endif
+                <flux:button variant="primary" wire:click="allowRestore" wire:loading.attr="disabled" wire:target="allowRestore">{{ $shop->restoreAllowed() ? __('ui.shops.extend_restore') : __('ui.shops.allow_restore') }}</flux:button>
             </div>
         </div>
     </flux:modal>

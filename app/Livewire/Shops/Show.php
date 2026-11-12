@@ -85,6 +85,18 @@ class Show extends Component
         Flux::toast(text: __('ui.shops.restore_allowed_done'), variant: 'success');
     }
 
+    public function revokeRestore(ShopManagementService $shops): void
+    {
+        $admin = auth()->user();
+        abort_if($admin === null, 403);
+
+        $shops->revokeRestore($this->shop(), $admin);
+
+        unset($this->shop);
+        Flux::modal('allow-restore')->close();
+        Flux::toast(text: __('ui.shops.restore_revoked_done'), variant: 'success');
+    }
+
     public function render(ShopDataCatalog $catalog): View
     {
         $shop = $this->shop;

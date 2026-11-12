@@ -195,6 +195,31 @@ class ShopManagementTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'shop.restore_allowed', 'shop_id' => $shop->id, 'user_id' => $this->admin->id]);
     }
 
+    public function test_an_administrator_can_revoke_the_restore_before_it_runs_out(): void
+    {
+        $shop = Shop::factory()->create();
+
+        Livewire::test(Show::class, ['shop' => $shop])
+            ->assertDontSee('data-revoke-restore', false)
+            ->call('allowRestore')
+            ->assertSee('data-revoke-restore', false)
+            ->call('revokeRestore')
+            ->assertDontSee('data-revoke-restore', false);
+
+        $this->assertFalse($shop->fresh()->restoreAllowed());
+        $this->assertNull($shop->fresh()->restore_allowed_until);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'shop.restore_revoked', 'shop_id' => $shop->id, 'user_id' => $this->admin->id]);
+    }
+
+    public function test_revoking_when_nothing_is_open_writes_no_audit_entry(): void
+    {
+        $shop = Shop::factory()->create();
+
+        Livewire::test(Show::class, ['shop' => $shop])->call('revokeRestore');
+
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'shop.restore_revoked']);
+    }
+
     public function test_suspending_twice_writes_one_audit_entry(): void
     {
         $shop = Shop::factory()->create();
