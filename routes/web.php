@@ -7,6 +7,7 @@ use App\Http\Controllers\ShopFileController;
 use App\Livewire\Audit;
 use App\Livewire\Dashboard;
 use App\Livewire\Events;
+use App\Livewire\Notifications;
 use App\Livewire\Payments;
 use App\Livewire\Plans;
 use App\Livewire\Shops;
@@ -53,5 +54,6 @@ Route::middleware(['auth', 'admin'])->group(function (): void {
     Route::livewire('plans', Plans\Index::class)->name('plans.index');
     Route::livewire('payments', Payments\Index::class)->name('payments.index');
     Route::livewire('events', Events\Index::class)->name('events.index');
+    Route::livewire('notifications', Notifications\Index::class)->name('notifications.index');
     Route::livewire('audit', Audit\Index::class)->name('audit.index');
 });

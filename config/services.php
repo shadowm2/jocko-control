@@ -28,6 +28,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // The daily report by SMS. With `enabled` false outside production the text is only logged.
+    'kavenegar' => [
+        'enabled' => (bool) env('JOCKO_SMS_ENABLED', false),
+        'key' => env('KAVENEGAR_API_KEY'),
+        'sender' => env('KAVENEGAR_SENDER'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

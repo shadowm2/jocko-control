@@ -41,6 +41,15 @@ class Form extends Component
 
     public bool $keep_original_pictures = true;
 
+    /** @var list<string> */
+    public array $digest_channels = [];
+
+    public string $digest_email = '';
+
+    public string $digest_mobile = '';
+
+    public string $digest_time = '21:00';
+
     public function mount(?Shop $shop = null): void
     {
         if ($shop?->exists) {
@@ -54,6 +63,10 @@ class Form extends Component
             $this->plan_id = (string) $shop->plan_id;
             $this->paid_until = $shop->paidUntil()?->format('Y-m-d') ?? '';
             $this->keep_original_pictures = $shop->keepsOriginalPictures();
+            $this->digest_channels = $shop->digestChannels();
+            $this->digest_email = (string) $shop->getAttribute('digest_email');
+            $this->digest_mobile = (string) $shop->getAttribute('digest_mobile');
+            $this->digest_time = (string) ($shop->getAttribute('digest_time') ?? '21:00');
         }
     }
 
@@ -81,6 +94,11 @@ class Form extends Component
             'plan_id' => ['nullable', 'integer', Rule::exists('plans', 'id')],
             'paid_until' => ['nullable', 'date'],
             'keep_original_pictures' => ['boolean'],
+            'digest_channels' => ['array'],
+            'digest_channels.*' => [Rule::in(Shop::DIGEST_CHANNELS)],
+            'digest_email' => [Rule::requiredIf(fn (): bool => in_array('mail', $this->digest_channels, true) && $this->email === ''), 'nullable', 'email', 'max:255'],
+            'digest_mobile' => [Rule::requiredIf(fn (): bool => in_array('sms', $this->digest_channels, true) && $this->phone === ''), 'nullable', 'regex:/^\+?[0-9]{8,15}$/'],
+            'digest_time' => ['required', 'regex:/^([01][0-9]|2[0-3]):[0-5][0-9]$/'],
         ];
     }
 
@@ -91,6 +109,7 @@ class Form extends Component
         // Empty optional inputs are stored as NULL rather than empty strings.
         $data = array_map(fn (mixed $value) => $value === '' ? null : $value, $data);
         $data['timezone'] ??= 'Asia/Tehran';
+        $data['digest_channels'] = $this->digest_channels === [] ? null : array_values(array_unique($this->digest_channels));
 
         if ($this->shopId === null) {
             $shop = $shops->create($data, auth()->user());

@@ -11,6 +11,7 @@ use App\Models\AuditLog;
 use App\Models\Shop;
 use App\Models\ShopRecord;
 use App\Models\SyncEvent;
+use App\Services\DigestSender;
 use App\Services\MirrorCheck;
 use App\Services\RemoteCommandService;
 use App\Services\ShopBillingService;
@@ -130,6 +131,30 @@ class Show extends Component
         unset($this->shop);
         Flux::modal('record-payment')->close();
         Flux::toast(text: __('ui.plans.payment_recorded_done'), variant: 'success');
+    }
+
+    /**
+     * Send today's report now through the channels in the shop's settings (a test of them).
+     * It does not count as the day's scheduled report.
+     */
+    public function sendDigestNow(DigestSender $digests): void
+    {
+        $admin = auth()->user();
+        abort_if($admin === null, 403);
+
+        $shop = Shop::query()->findOrFail($this->shopId);
+
+        if ($shop->digestChannels() === []) {
+            return;
+        }
+
+        $result = $digests->send($shop, $admin, markSent: false);
+
+        if ($result['failed'] === []) {
+            Flux::toast(text: __('ui.digest.sent_now', ['channels' => implode(', ', array_map(fn (string $c): string => __("ui.digest.channel.{$c}"), $result['sent']))]), variant: 'success');
+        } else {
+            Flux::toast(text: __('ui.digest.send_failed', ['channels' => implode(', ', array_keys($result['failed']))]), variant: 'danger');
+        }
     }
 
     /**

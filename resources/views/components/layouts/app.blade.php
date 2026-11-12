@@ -29,6 +29,10 @@
             <flux:sidebar.item icon="inbox-arrow-down" :href="route('events.index')" :current="request()->routeIs('events.*')" wire:navigate>
                 {{ __('ui.nav.events') }}
             </flux:sidebar.item>
+            @php($unreadNotifications = auth()->user()?->unreadNotifications()->count() ?? 0)
+            <flux:sidebar.item icon="bell" :href="route('notifications.index')" :current="request()->routeIs('notifications.*')" :badge="$unreadNotifications > 0 ? \App\Support\Format::number($unreadNotifications) : null" badge-color="blue" wire:navigate>
+                {{ __('ui.nav.notifications') }}
+            </flux:sidebar.item>
             <flux:sidebar.item icon="clipboard-document-list" :href="route('audit.index')" :current="request()->routeIs('audit.*')" wire:navigate>
                 {{ __('ui.nav.audit') }}
             </flux:sidebar.item>

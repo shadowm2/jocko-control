@@ -14,11 +14,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'slug', 'owner_name', 'email', 'phone', 'address', 'timezone', 'status', 'notes', 'plan_id', 'paid_until', 'keep_original_pictures'])]
+#[Fillable(['name', 'slug', 'owner_name', 'email', 'phone', 'address', 'timezone', 'status', 'notes', 'plan_id', 'paid_until', 'keep_original_pictures', 'digest_channels', 'digest_email', 'digest_mobile', 'digest_time'])]
 class Shop extends Model
 {
     /** @use HasFactory<ShopFactory> */
     use HasFactory, HasUuids;
+
+    /** @var list<string> */
+    public const DIGEST_CHANNELS = ['mail', 'sms', 'internal'];
 
     /**
      * @return array<string, string>
@@ -30,6 +33,8 @@ class Shop extends Model
             'restore_allowed_until' => 'datetime',
             'paid_until' => 'date',
             'keep_original_pictures' => 'boolean',
+            'digest_channels' => 'array',
+            'digest_last_sent_on' => 'date',
         ];
     }
 
@@ -47,6 +52,29 @@ class Shop extends Model
     public function keepsOriginalPictures(): bool
     {
         return (bool) $this->getAttribute('keep_original_pictures');
+    }
+
+    /**
+     * The ways the daily report reaches people: `mail` and `sms` go to the shop
+     * (its owner), `internal` to the administrators' notification inbox here.
+     *
+     * @return list<string>
+     */
+    public function digestChannels(): array
+    {
+        $channels = $this->getAttribute('digest_channels');
+
+        return is_array($channels) ? array_values(array_intersect(self::DIGEST_CHANNELS, $channels)) : [];
+    }
+
+    public function digestEmail(): ?string
+    {
+        return filled($this->getAttribute('digest_email')) ? (string) $this->getAttribute('digest_email') : (filled($this->email) ? (string) $this->email : null);
+    }
+
+    public function digestMobile(): ?string
+    {
+        return filled($this->getAttribute('digest_mobile')) ? (string) $this->getAttribute('digest_mobile') : (filled($this->phone) ? (string) $this->phone : null);
     }
 
     public function paidUntil(): ?CarbonInterface

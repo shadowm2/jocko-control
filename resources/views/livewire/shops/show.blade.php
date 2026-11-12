@@ -12,6 +12,10 @@
         <div class="flex flex-wrap gap-2">
             <flux:button icon="pencil-square" :href="route('shops.edit', $shop)" wire:navigate>{{ __('ui.common.edit') }}</flux:button>
 
+            @if ($shop->digestChannels() !== [])
+                <flux:button icon="paper-airplane" wire:click="sendDigestNow" wire:loading.attr="disabled" wire:target="sendDigestNow" data-send-digest>{{ __('ui.digest.send_now') }}</flux:button>
+            @endif
+
             <flux:modal.trigger name="allow-restore">
                 <flux:button icon="arrow-path" data-restore-open="{{ $shop->restoreAllowed() ? 'yes' : 'no' }}">{{ $shop->restoreAllowed() ? __('ui.shops.restore_open_button') : __('ui.shops.allow_restore') }}</flux:button>
             </flux:modal.trigger>
