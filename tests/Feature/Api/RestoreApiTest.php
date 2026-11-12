@@ -44,7 +44,7 @@ class RestoreApiTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['shop_id' => $shop->id, 'user_id' => $admin->id, 'action' => AuditAction::ShopRestoreAllowed->value]);
     }
 
-    public function test_the_summary_counts_what_can_be_restored_and_is_audited(): void
+    public function test_the_summary_counts_what_can_be_restored_and_is_not_a_restore_yet(): void
     {
         $shop = Shop::factory()->create(['restore_allowed_until' => now()->addHour()]);
         $issued = $this->issueDevice($shop);
@@ -58,6 +58,22 @@ class RestoreApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.entities.brand', 2)
             ->assertJsonPath('data.entities.color', 1);
+
+        $this->assertSame(0, AuditLog::where('action', AuditAction::ShopRestoreStarted)->count());
+    }
+
+    public function test_a_whole_restore_is_logged_once_however_many_requests_it_takes(): void
+    {
+        $shop = Shop::factory()->create(['restore_allowed_until' => now()->addHour()]);
+        $issued = $this->issueDevice($shop);
+        $this->mirror($shop, 'brand', 1, ['name' => 'Bosch']);
+        $this->mirror($shop, 'color', 1, ['name' => 'Red', 'hex' => '#f00']);
+
+        $this->getJson('/api/v1/restore', $this->bearer($issued))->assertOk();
+        $this->getJson('/api/v1/restore', $this->bearer($issued))->assertOk();
+        $this->getJson('/api/v1/restore/brand', $this->bearer($issued))->assertOk();
+        $this->getJson('/api/v1/restore/color', $this->bearer($issued))->assertOk();
+        $this->getJson('/api/v1/restore/brand?after=1', $this->bearer($issued))->assertOk();
 
         $this->assertSame(1, AuditLog::where('action', AuditAction::ShopRestoreStarted)->count());
     }

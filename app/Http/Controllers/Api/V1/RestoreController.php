@@ -11,6 +11,7 @@ use App\Services\ShopDataCatalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Hands a shop's own mirrored records back to its device, so a lost
@@ -20,6 +21,9 @@ use Illuminate\Http\Request;
 class RestoreController extends Controller
 {
     private const PAGE_SIZE = 500;
+
+    /** Requests from one device within this time count as the same restore. */
+    private const RESTORE_SESSION_MINUTES = 30;
 
     public function __construct(
         private readonly ShopDataCatalog $catalog,
@@ -38,8 +42,6 @@ class RestoreController extends Controller
             ->groupBy('entity')
             ->pluck('total', 'entity');
 
-        $this->audit->record(AuditAction::ShopRestoreStarted, null, $device->shop_id, $device);
-
         return response()->json(['data' => [
             'allowed_until' => $device->shop?->restoreAllowedUntil()?->toIso8601String(),
             'entities' => $counts->map(fn ($total): int => (int) $total),
@@ -57,6 +59,8 @@ class RestoreController extends Controller
 
         $after = max(0, (int) $request->query('after', 0));
 
+        $this->recordRestoreStarted($device);
+
         $records = $this->restorable($device)
             ->where('entity', $entity)
             ->where('local_id', '>', $after)
@@ -71,6 +75,17 @@ class RestoreController extends Controller
             'records' => $page->pluck('data')->values(),
             'next' => $more ? $page->last()?->local_id : null,
         ]]);
+    }
+
+    /**
+     * A restore reads many pages of many entity types, so it is logged once, when the
+     * first records leave, not on every request (and not for looking at the summary).
+     */
+    private function recordRestoreStarted(ShopDevice $device): void
+    {
+        if (Cache::add('restore-started:'.$device->getKey(), true, now()->addMinutes(self::RESTORE_SESSION_MINUTES))) {
+            $this->audit->record(AuditAction::ShopRestoreStarted, null, $device->shop_id, $device);
+        }
     }
 
     private function authorizedDevice(Request $request): ShopDevice
