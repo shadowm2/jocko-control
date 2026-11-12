@@ -93,6 +93,54 @@
         @endif
     </flux:card>
 
+    <flux:card data-mirror="{{ $mirror['status'] }}">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <flux:heading size="lg">{{ __('ui.mirror.title') }}</flux:heading>
+                <flux:badge size="sm" :color="match ($mirror['status']) { 'ok' => 'green', 'drift' => 'red', default => 'zinc' }">{{ __('ui.mirror.status.'.$mirror['status']) }}</flux:badge>
+                @if ($mirror['stale'])
+                    <flux:badge size="sm" color="amber">{{ __('ui.mirror.old') }}</flux:badge>
+                @endif
+            </div>
+            @if ($mirror['resendable'] !== [])
+                <flux:button size="sm" icon="arrow-path" wire:click="resendMissing" wire:loading.attr="disabled" wire:target="resendMissing" data-resend-missing>{{ __('ui.mirror.resend') }}</flux:button>
+            @endif
+        </div>
+
+        @if ($mirror['status'] === 'unknown')
+            <flux:text>{{ __('ui.mirror.unknown_hint') }}</flux:text>
+        @else
+            <flux:text class="mb-3">{{ __('ui.mirror.checked', ['time' => \App\Support\Format::ago($mirror['checked_at'])]) }}</flux:text>
+            @if ($mirror['status'] === 'ok')
+                <flux:text>{{ __('ui.mirror.ok_hint') }}</flux:text>
+            @else
+                <div class="overflow-x-auto" data-mirror-rows>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-start text-zinc-500">
+                                <th class="py-1 text-start font-normal">{{ __('ui.mirror.entity') }}</th>
+                                <th class="py-1 text-start font-normal">{{ __('ui.mirror.in_shop') }}</th>
+                                <th class="py-1 text-start font-normal">{{ __('ui.mirror.in_control') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($mirror['rows'] as $row)
+                                <tr class="border-t border-zinc-100 dark:border-zinc-800" data-mirror-row="{{ $row['entity'] }}">
+                                    <td class="py-1.5 font-medium" dir="ltr">{{ $row['entity'] }}</td>
+                                    <td class="py-1.5 tabular-nums">{{ \App\Support\Format::number($row['shop_alive']) }} <span class="text-zinc-500">+ {{ \App\Support\Format::number($row['shop_removed']) }} {{ __('ui.mirror.deleted') }}</span></td>
+                                    <td class="py-1.5 tabular-nums">{{ \App\Support\Format::number($row['control_alive']) }} <span class="text-zinc-500">+ {{ \App\Support\Format::number($row['control_removed']) }} {{ __('ui.mirror.deleted') }}</span></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @if ($mirror['extra'] > 0)
+                    <flux:text size="sm" class="mt-3 text-zinc-500">{{ __('ui.mirror.extra_hint') }}</flux:text>
+                @endif
+            @endif
+        @endif
+    </flux:card>
+
     <flux:card>
         <flux:heading size="lg" class="mb-4">{{ __('ui.shops.information') }}</flux:heading>
         <dl class="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">

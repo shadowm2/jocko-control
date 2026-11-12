@@ -75,6 +75,21 @@
         </flux:text>
     </flux:card>
 
+    @if ($drifted !== [])
+        <flux:card data-mirror-drift>
+            <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+                <flux:heading size="lg">{{ __('ui.mirror.fleet_title') }}</flux:heading>
+                <flux:badge color="red" size="sm">{{ __('ui.mirror.fleet_count', ['count' => Format::number(count($drifted))]) }}</flux:badge>
+            </div>
+            @foreach ($drifted as $row)
+                <div wire:key="drift-{{ $row['shop']->id }}" class="flex items-center justify-between gap-4 border-t border-zinc-100 py-2 text-sm first:border-t-0 dark:border-zinc-800">
+                    <a class="font-medium underline" href="{{ route('shops.show', $row['shop']) }}" wire:navigate>{{ $row['shop']->name }}</a>
+                    <span class="text-zinc-500">{{ __('ui.mirror.fleet_row', ['missing' => Format::number($row['missing']), 'extra' => Format::number($row['extra']), 'entities' => Format::number($row['entities'])]) }}</span>
+                </div>
+            @endforeach
+        </flux:card>
+    @endif
+
     @if ($billing['shops']->isNotEmpty())
         <flux:card data-billing-attention>
             <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
