@@ -16,7 +16,10 @@ class Index extends Component
 
     public function render(PaymentsOverview $overview): View
     {
-        return view('livewire.payments.index', $overview->summary())
+        return view('livewire.payments.index', $overview->summary() + [
+            'cheques' => $overview->chequesDue(),
+            'cash' => $overview->cashDifferences(),
+        ])
             ->layout('components.layouts.app', ['title' => __('ui.payments.title')]);
     }
 }

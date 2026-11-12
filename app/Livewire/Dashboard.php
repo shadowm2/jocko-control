@@ -17,6 +17,7 @@ class Dashboard extends Component
         return view('livewire.dashboard', [
             'summary' => $metrics->summary(),
             'attention' => $metrics->attention(),
+            'billing' => $metrics->billingAttention(),
             'activity' => $metrics->recentActivity(),
             'syncErrors' => $metrics->recentSyncErrors(),
             'versions' => $versions->summary(),

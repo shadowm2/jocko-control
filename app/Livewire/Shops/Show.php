@@ -10,6 +10,7 @@ use App\Models\AuditLog;
 use App\Models\Shop;
 use App\Models\ShopRecord;
 use App\Models\SyncEvent;
+use App\Services\ShopBillingService;
 use App\Services\ShopDataCatalog;
 use App\Services\ShopManagementService;
 use Flux\Flux;
@@ -26,6 +27,11 @@ class Show extends Component
 
     #[Locked]
     public string $shopId;
+
+    /** Blank means the plan's price. */
+    public ?string $paymentAmount = null;
+
+    public string $paymentNote = '';
 
     /**
      * @return list<string>
@@ -97,6 +103,32 @@ class Show extends Component
         Flux::toast(text: __('ui.shops.restore_revoked_done'), variant: 'success');
     }
 
+    public function recordPayment(ShopBillingService $billing): void
+    {
+        $admin = auth()->user();
+        abort_if($admin === null, 403);
+
+        $this->validate([
+            'paymentAmount' => ['nullable', 'integer', 'min:0', 'max:99999999999'],
+            'paymentNote' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $shop = Shop::query()->findOrFail($this->shopId);
+
+        if ($shop->plan_id === null) {
+            $this->addError('paymentAmount', __('ui.plans.no_plan_hint'));
+
+            return;
+        }
+
+        $billing->recordPayment($shop, $admin, filled($this->paymentAmount) ? (int) $this->paymentAmount : null, $this->paymentNote);
+
+        $this->reset('paymentAmount', 'paymentNote');
+        unset($this->shop);
+        Flux::modal('record-payment')->close();
+        Flux::toast(text: __('ui.plans.payment_recorded_done'), variant: 'success');
+    }
+
     public function render(ShopDataCatalog $catalog): View
     {
         $shop = $this->shop;
@@ -122,6 +154,7 @@ class Show extends Component
             'shop' => $shop->loadMissing('plan'),
             'activeDevices' => $shop->devices()->where('status', DeviceStatus::Active->value)->count(),
             'lastSyncAt' => $lastSyncAt ? Carbon::parse($lastSyncAt, 'UTC') : null,
+            'payments' => $shop->subscriptionPayments()->with('recordedBy:id,name')->orderByDesc('period_end')->orderByDesc('id')->limit(10)->get(),
             'events' => $events,
             'eventRecords' => $records,
             'audit' => AuditLog::query()

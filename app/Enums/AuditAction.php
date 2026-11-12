@@ -12,6 +12,7 @@ enum AuditAction: string
     case ShopSuspended = 'shop.suspended';
     case ShopReactivated = 'shop.reactivated';
     case ShopDataExported = 'shop.data_exported';
+    case ShopPaymentRecorded = 'shop.payment_recorded';
     case ShopRestoreAllowed = 'shop.restore_allowed';
     case ShopRestoreRevoked = 'shop.restore_revoked';
     case ShopRestoreStarted = 'shop.restore_started';

@@ -134,4 +134,76 @@ class PaymentsOverviewTest extends TestCase
         $this->assertSame(3000.0, $summary['totals']['today']);
         $this->assertSame(['cheque' => 2000.0, 'cash' => 1000.0], $summary['byMethod']['today']);
     }
+
+    private function cheque(Shop $shop, ?string $due, string $status = 'pending', float $amount = 1000, bool $removed = false): void
+    {
+        $this->mirror($shop, 'payment', $this->next++, ['method' => 'cheque', 'amount' => $amount, 'paid_at' => '2026-11-01', 'cheque_status' => $status, 'cheque_due_at' => $due, 'cheque_number' => 'CH'.$this->next], null, $removed);
+    }
+
+    public function test_it_lists_the_cheques_still_waiting_with_the_overdue_ones_first(): void
+    {
+        $this->cheque($this->alpha, '2026-11-20', amount: 3000);
+        $this->cheque($this->alpha, '2026-11-01', amount: 2000);   // overdue
+        $this->cheque($this->beta, '2026-11-12', amount: 500);     // due today: not overdue yet
+        $this->cheque($this->beta, null, amount: 700);             // no due date: last
+        $this->cheque($this->alpha, '2026-10-01', 'cleared');
+        $this->cheque($this->alpha, '2026-10-02', 'bounced');
+        $this->cheque($this->alpha, '2026-10-03', removed: true);
+
+        $cheques = app(PaymentsOverview::class)->chequesDue();
+
+        $this->assertSame([4, 6200.0, 1, 2000.0], [$cheques['count'], $cheques['total'], $cheques['overdue_count'], $cheques['overdue_total']]);
+        $this->assertSame(
+            [2000.0, 500.0, 3000.0, 700.0],
+            array_map(fn (array $row): float => $row['amount'], $cheques['cheques']),
+        );
+        $this->assertSame([true, false, false, false], array_map(fn (array $row): bool => $row['overdue'], $cheques['cheques']));
+    }
+
+    public function test_a_cheque_is_overdue_by_its_own_shops_day(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-12 22:00:00', 'UTC'));
+        $this->alpha->update(['timezone' => 'UTC']);
+        $tokyo = Shop::factory()->create(['name' => 'Tokyo', 'timezone' => 'Asia/Tokyo']);   // already the 13th there
+        $this->cheque($tokyo, '2026-11-12');
+        $this->cheque($this->alpha, '2026-11-12');
+
+        $byShop = collect(app(PaymentsOverview::class)->chequesDue()['cheques'])->mapWithKeys(fn (array $row): array => [$row['shop']->name => $row['overdue']]);
+
+        $this->assertTrue($byShop['Tokyo']);
+        $this->assertFalse($byShop['Alpha']);
+    }
+
+    public function test_it_lists_the_recent_closes_where_the_cash_did_not_match(): void
+    {
+        $close = fn (Shop $shop, string $date, float $difference, bool $removed = false) => $this->mirror($shop, 'cash_close', $this->next++, ['business_date' => $date, 'expected_cash' => 100, 'counted_cash' => 100 + $difference, 'difference' => $difference], null, $removed);
+
+        $close($this->alpha, '2026-11-11', -50);
+        $close($this->beta, '2026-11-12', 0);
+        $close($this->beta, '2026-11-10', 20);
+        $close($this->alpha, '2026-10-01', -999);          // too long ago
+        $close($this->alpha, '2026-11-09', -7, removed: true);
+
+        $cash = app(PaymentsOverview::class)->cashDifferences();
+
+        $this->assertSame([3, 2], [$cash['closes'], $cash['differences']]);
+        $this->assertSame([-50.0, 20.0], array_map(fn (array $row): float => $row['difference'], $cash['rows']));
+    }
+
+    public function test_the_page_shows_both_lists_and_is_calm_with_nothing_to_show(): void
+    {
+        Livewire::test(Index::class)
+            ->assertSee('data-cheques-due', false)
+            ->assertSee(__('ui.payments.no_cheques'))
+            ->assertSee(__('ui.payments.no_closes'))
+            ->assertDontSee('data-cheque ', false);
+
+        $this->cheque($this->alpha, '2026-11-01');
+        $this->mirror($this->alpha, 'cash_close', $this->next++, ['business_date' => '2026-11-11', 'expected_cash' => 100, 'counted_cash' => 90, 'difference' => -10]);
+
+        Livewire::test(Index::class)
+            ->assertSee('data-cheque', false)
+            ->assertSee('data-overdue-cheques="1"', false)
+            ->assertSee('data-cash-difference', false);
+    }
 }

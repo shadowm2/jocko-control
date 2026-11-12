@@ -37,7 +37,14 @@
     @php($overLimit = $shop->plan?->max_devices !== null && $activeDevices > $shop->plan->max_devices)
 
     <flux:card>
-        <flux:heading size="lg" class="mb-4">{{ __('ui.plans.billing') }}</flux:heading>
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <flux:heading size="lg">{{ __('ui.plans.billing') }}</flux:heading>
+            @if ($shop->plan)
+                <flux:modal.trigger name="record-payment">
+                    <flux:button size="sm" icon="banknotes" data-record-payment>{{ __('ui.plans.record_payment') }}</flux:button>
+                </flux:modal.trigger>
+            @endif
+        </div>
         @if ($shop->plan)
             <dl class="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div>
@@ -61,6 +68,26 @@
                     </dd>
                 </div>
             </dl>
+
+            @if ($payments->isNotEmpty())
+                <div class="mt-6" data-payments>
+                    <flux:heading class="mb-2">{{ __('ui.plans.payment_history') }}</flux:heading>
+                    @foreach ($payments as $payment)
+                        <div wire:key="payment-{{ $payment->id }}" class="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 py-2 text-sm first:border-t-0 dark:border-zinc-800" data-payment>
+                            <div>
+                                <span dir="ltr" class="font-medium">{{ \App\Support\Format::date($payment->period_start) }} → {{ \App\Support\Format::date($payment->period_end) }}</span>
+                                @if ($payment->note)
+                                    <span class="text-zinc-500">· {{ $payment->note }}</span>
+                                @endif
+                            </div>
+                            <div class="text-zinc-500">
+                                <span class="font-medium text-zinc-800 dark:text-white">{{ \App\Support\Format::number($payment->amount) }}</span>
+                                @if ($payment->recordedBy) · {{ $payment->recordedBy->name }} @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         @else
             <flux:text>{{ __('ui.plans.no_plan_hint') }}</flux:text>
         @endif
@@ -170,6 +197,31 @@
             </div>
         </div>
     </flux:modal>
+
+    @if ($shop->plan)
+        <flux:modal name="record-payment" class="md:w-[28rem]">
+            <form wire:submit="recordPayment" class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('ui.plans.record_payment_title') }}</flux:heading>
+                    <flux:text class="mt-2">{{ __('ui.plans.record_payment_body', ['days' => $shop->plan->billing_days]) }}</flux:text>
+                </div>
+                <flux:field>
+                    <flux:label>{{ __('ui.plans.payment_amount') }}</flux:label>
+                    <flux:input type="number" min="0" wire:model="paymentAmount" dir="ltr" :placeholder="(string) $shop->plan->price" />
+                    <flux:error name="paymentAmount" />
+                </flux:field>
+                <flux:field>
+                    <flux:label>{{ __('ui.plans.payment_note') }}</flux:label>
+                    <flux:input wire:model="paymentNote" maxlength="500" />
+                    <flux:error name="paymentNote" />
+                </flux:field>
+                <div class="flex justify-end gap-2">
+                    <flux:modal.close><flux:button variant="ghost">{{ __('ui.common.cancel') }}</flux:button></flux:modal.close>
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="recordPayment" data-confirm-payment>{{ __('ui.plans.record_payment') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+    @endif
 
     <flux:modal name="suspend-shop" class="md:w-[28rem]">
         <div class="space-y-6">

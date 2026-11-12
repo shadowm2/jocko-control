@@ -75,6 +75,35 @@
         </flux:text>
     </flux:card>
 
+    @if ($billing['shops']->isNotEmpty())
+        <flux:card data-billing-attention>
+            <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+                <flux:heading size="lg">{{ __('ui.dashboard.billing_attention') }}</flux:heading>
+                <div class="flex gap-2">
+                    @if ($billing['expired'] > 0)
+                        <flux:badge color="red" size="sm">{{ __('ui.dashboard.billing_expired', ['count' => Format::number($billing['expired'])]) }}</flux:badge>
+                    @endif
+                    @if ($billing['due_soon'] > 0)
+                        <flux:badge color="amber" size="sm">{{ __('ui.dashboard.billing_due_soon', ['count' => Format::number($billing['due_soon'])]) }}</flux:badge>
+                    @endif
+                </div>
+            </div>
+
+            @foreach ($billing['shops'] as $shop)
+                <div wire:key="billing-{{ $shop->id }}" class="flex items-center justify-between gap-4 border-t border-zinc-100 py-2 text-sm first:border-t-0 dark:border-zinc-800">
+                    <div class="min-w-0">
+                        <a class="font-medium underline" href="{{ route('shops.show', $shop) }}" wire:navigate>{{ $shop->name }}</a>
+                        <span class="text-zinc-500">· {{ $shop->plan?->name }}</span>
+                    </div>
+                    <div class="flex shrink-0 items-center gap-2">
+                        <span dir="ltr" class="text-zinc-500">{{ Format::date($shop->paidUntil()) }}</span>
+                        <flux:badge size="sm" :color="$shop->billingStatus()->color()">{{ $shop->billingStatus()->label() }}</flux:badge>
+                    </div>
+                </div>
+            @endforeach
+        </flux:card>
+    @endif
+
     @if ($versions['rows'] !== [])
         <flux:card data-versions>
             <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
