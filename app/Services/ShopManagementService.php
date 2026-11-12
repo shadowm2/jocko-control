@@ -69,6 +69,19 @@ class ShopManagementService
         return $shop;
     }
 
+    /**
+     * Close the restore window early: the shop's device is refused again.
+     */
+    public function revokeRestore(Shop $shop, User $admin): Shop
+    {
+        if ($shop->restoreAllowed()) {
+            $shop->forceFill(['restore_allowed_until' => null])->save();
+            $this->audit->record(AuditAction::ShopRestoreRevoked, $admin, $shop);
+        }
+
+        return $shop;
+    }
+
     private function changeStatus(Shop $shop, ShopStatus $status, AuditAction $action, User $admin): Shop
     {
         return DB::transaction(function () use ($shop, $status, $action, $admin): Shop {
