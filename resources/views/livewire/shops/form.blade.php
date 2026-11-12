@@ -75,6 +75,49 @@
                 <flux:error name="keep_original_pictures" />
             </flux:field>
 
+            <div class="space-y-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700" data-digest-settings>
+                <div>
+                    <flux:heading>{{ __('ui.digest.title') }}</flux:heading>
+                    <flux:text size="sm" class="mt-1">{{ __('ui.digest.help') }}</flux:text>
+                </div>
+
+                <flux:checkbox.group wire:model.live="digest_channels" :label="__('ui.digest.channels')">
+                    <flux:checkbox value="mail" :label="__('ui.digest.channel.mail')" :description="__('ui.digest.channel.mail_help')" />
+                    <flux:checkbox value="sms" :label="__('ui.digest.channel.sms')" :description="__('ui.digest.channel.sms_help')" />
+                    <flux:checkbox value="internal" :label="__('ui.digest.channel.internal')" :description="__('ui.digest.channel.internal_help')" />
+                </flux:checkbox.group>
+                <flux:error name="digest_channels.*" />
+
+                @if ($digest_channels !== [])
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                        <flux:field>
+                            <flux:label>{{ __('ui.digest.time') }}</flux:label>
+                            <flux:input type="time" wire:model="digest_time" dir="ltr" />
+                            <flux:description>{{ __('ui.digest.time_help') }}</flux:description>
+                            <flux:error name="digest_time" />
+                        </flux:field>
+
+                        @if (in_array('mail', $digest_channels, true))
+                            <flux:field>
+                                <flux:label>{{ __('ui.digest.email') }}</flux:label>
+                                <flux:input type="email" wire:model="digest_email" dir="ltr" :placeholder="$email" />
+                                <flux:description>{{ __('ui.digest.recipient_help') }}</flux:description>
+                                <flux:error name="digest_email" />
+                            </flux:field>
+                        @endif
+
+                        @if (in_array('sms', $digest_channels, true))
+                            <flux:field>
+                                <flux:label>{{ __('ui.digest.mobile') }}</flux:label>
+                                <flux:input wire:model="digest_mobile" dir="ltr" :placeholder="$phone" />
+                                <flux:description>{{ __('ui.digest.recipient_help') }}</flux:description>
+                                <flux:error name="digest_mobile" />
+                            </flux:field>
+                        @endif
+                    </div>
+                @endif
+            </div>
+
             <flux:field>
                 <flux:label>{{ __('ui.shops.address') }}</flux:label>
                 <flux:textarea wire:model="address" rows="2" />
