@@ -28,6 +28,8 @@ enum CommandType: string
         return match ($this) {
             self::SyncNow => [
                 'full' => ['sometimes', 'boolean'],
+                'entities' => ['sometimes', 'array', 'max:100'],
+                'entities.*' => ['string', 'regex:/^[a-z0-9_]{1,60}$/'],
             ],
             self::CheckVersion => [],
             self::CollectDiagnostics => [

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Shops;
 
+use App\Enums\CommandType;
 use App\Enums\DeviceStatus;
 use App\Events\ShopChanged;
 use App\Livewire\Concerns\AuthorizesAdmin;
@@ -10,6 +11,8 @@ use App\Models\AuditLog;
 use App\Models\Shop;
 use App\Models\ShopRecord;
 use App\Models\SyncEvent;
+use App\Services\MirrorCheck;
+use App\Services\RemoteCommandService;
 use App\Services\ShopBillingService;
 use App\Services\ShopDataCatalog;
 use App\Services\ShopManagementService;
@@ -129,7 +132,28 @@ class Show extends Component
         Flux::toast(text: __('ui.plans.payment_recorded_done'), variant: 'success');
     }
 
-    public function render(ShopDataCatalog $catalog): View
+    /**
+     * Ask the shop to send again the record types the copy here is missing records of.
+     */
+    public function resendMissing(MirrorCheck $mirror, RemoteCommandService $commands): void
+    {
+        $admin = auth()->user();
+        abort_if($admin === null, 403);
+
+        $shop = Shop::query()->findOrFail($this->shopId);
+        $check = $mirror->check($shop);
+
+        if ($check['device'] === null || $check['resendable'] === []) {
+            return;
+        }
+
+        $commands->queue($admin, $check['device'], CommandType::SyncNow, ['entities' => $check['resendable']], now()->addHours(24));
+
+        Flux::toast(text: __('ui.mirror.resend_queued'), variant: 'success');
+        $this->dispatch('commands-changed');
+    }
+
+    public function render(ShopDataCatalog $catalog, MirrorCheck $mirror): View
     {
         $shop = $this->shop;
 
@@ -154,6 +178,7 @@ class Show extends Component
             'shop' => $shop->loadMissing('plan'),
             'activeDevices' => $shop->devices()->where('status', DeviceStatus::Active->value)->count(),
             'lastSyncAt' => $lastSyncAt ? Carbon::parse($lastSyncAt, 'UTC') : null,
+            'mirror' => $mirror->check($shop),
             'payments' => $shop->subscriptionPayments()->with('recordedBy:id,name')->orderByDesc('period_end')->orderByDesc('id')->limit(10)->get(),
             'events' => $events,
             'eventRecords' => $records,

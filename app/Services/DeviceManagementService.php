@@ -27,7 +27,10 @@ class DeviceManagementService
 
     public const LOCAL_STATUS_KEYS = ['state', 'pending_events', 'oldest_pending_seconds', 'database_ok', 'disk_free_mb', 'uptime_seconds'];
 
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly MirrorCheck $mirror,
+    ) {}
 
     public function register(Shop $shop, string $name, User $admin): IssuedDevice
     {
@@ -93,15 +96,25 @@ class DeviceManagementService
      */
     public function recordHeartbeat(ShopDevice $device, array $data): ShopDevice
     {
-        $metadata = $device->metadata ?? [];
-
+        $current = $device->getAttribute('metadata');
+        $updates = [];
         $status = [];
 
         if (isset($data['local_status']) && is_array($data['local_status'])) {
             $status = array_intersect_key($data['local_status'], array_flip(self::LOCAL_STATUS_KEYS));
-            $metadata['local_status'] = $status;
-            $metadata['local_status_at'] = now()->toIso8601String();
+            $updates['local_status'] = $status;
+            $updates['local_status_at'] = now()->toIso8601String();
         }
+
+        $counts = $this->cleanRecordCounts($data['record_counts'] ?? null);
+
+        if ($counts !== null) {
+            $updates['record_counts'] = $counts;
+            $updates['record_counts_at'] = now()->toIso8601String();
+            $updates['mirror'] = $this->mirror->compare($device->shop_id, $counts);
+        }
+
+        $metadata = [...(is_array($current) ? $current : []), ...$updates];
 
         $device->forceFill([
             'last_seen_at' => now(),
@@ -131,6 +144,29 @@ class DeviceManagementService
         $this->sampleBacklog($device, $status);
 
         return $device;
+    }
+
+    /**
+     * Entity type => the shop's alive and removed record counts, keeping only
+     * well-formed type names.
+     *
+     * @return array<string, array{alive: int, removed: int}>|null
+     */
+    private function cleanRecordCounts(mixed $counts): ?array
+    {
+        if (! is_array($counts) || $counts === []) {
+            return null;
+        }
+
+        $clean = [];
+
+        foreach ($counts as $entity => $row) {
+            if (is_string($entity) && preg_match('/^[a-z0-9_]{1,60}$/', $entity) === 1 && is_array($row)) {
+                $clean[$entity] = ['alive' => (int) ($row['alive'] ?? 0), 'removed' => (int) ($row['removed'] ?? 0)];
+            }
+        }
+
+        return $clean === [] ? null : $clean;
     }
 
     /**

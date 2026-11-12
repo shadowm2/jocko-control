@@ -391,12 +391,6 @@ parameters:
 			path: app/Services/DeviceManagementService.php
 
 		-
-			message: '#^Cannot assign offset ''local_status'' to array\|string\.$#'
-			identifier: offsetAssign.dimType
-			count: 1
-			path: app/Services/DeviceManagementService.php
-
-		-
 			message: '#^Parameter \#1 \$device of class App\\Services\\IssuedDevice constructor expects App\\Models\\ShopDevice, App\\Models\\ShopDevice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ShopDevice\> given\.$#'
 			identifier: argument.type
 			count: 1

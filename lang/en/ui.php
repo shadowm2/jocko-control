@@ -345,6 +345,25 @@ return [
         'snapshot' => 'full copy',
     ],
 
+    'mirror' => [
+        'title' => 'Data check',
+        'status' => ['ok' => 'Matches', 'drift' => 'Out of step', 'unknown' => 'Not checked yet'],
+        'old' => 'Old report',
+        'unknown_hint' => 'The shop has not reported its record counts yet. It does so about every 30 minutes, once it has sent all its changes.',
+        'checked' => 'The shop last reported :time.',
+        'ok_hint' => 'Every record the shop reported is here, so a restore would bring all of it back.',
+        'entity' => 'Records',
+        'in_shop' => 'In the shop',
+        'in_control' => 'Here',
+        'deleted' => 'deleted',
+        'resend' => 'Ask the shop to send them again',
+        'resend_queued' => 'The shop will send these records again the next time it connects.',
+        'extra_hint' => 'Some types have more records here than in the shop. Sending again cannot fix those (the records were removed from the shop for good).',
+        'fleet_title' => 'Copies out of step',
+        'fleet_count' => ':count shop(s)',
+        'fleet_row' => ':missing missing · :extra extra · :entities record type(s)',
+    ],
+
     'payments' => [
         'title' => 'Collections',
         'subtitle' => 'What the shops collected, by payment method',
